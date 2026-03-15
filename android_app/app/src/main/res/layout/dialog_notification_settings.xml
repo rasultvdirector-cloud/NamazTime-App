@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_reminders_enabled_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminders_master_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_jumaa_notifications_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_jumaa_notifications_label" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_reminder_before_label"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_pre_reminder_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_reminder_type_label"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_reminder_type_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_reminder_repeat_label"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_repeat_reminder_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_show_imsak_iftar_all_months_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_show_imsak_iftar_all_months_label" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_reminder_prayers_label"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_fajr_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_reminder_fajr_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_sunrise_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminder_sunrise_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_dhuhr_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminder_dhuhr_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_asr_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminder_asr_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_maghrib_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminder_maghrib_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_isha_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_reminder_isha_label" />
+
+        <Button
+            android:id="@+id/test_reminder_button_dialog"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="14dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/test_reminder_button" />
+
+        <Button
+            android:id="@+id/test_pre_reminder_button_dialog"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/test_prereminder_button" />
+
+    </LinearLayout>
+</ScrollView>

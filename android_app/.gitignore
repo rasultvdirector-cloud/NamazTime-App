@@ -1,0 +1,5 @@
+keystore.properties
+*.jks
+*.keystore
+app.run.xml
+local.properties

@@ -1,0 +1,63 @@
+{
+  "suraNumber": 1,
+  "nameArabic": "الفاتحة",
+  "nameLatin": "Al-Fatihah",
+  "items": [
+    {
+      "ayahNumber": 1,
+      "ayahKey": "1:1",
+      "arabicText": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+      "translation": "Mərhəmətli və Rəhmli Allahın adı ilə.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 2,
+      "ayahKey": "1:2",
+      "arabicText": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+      "translation": "Həmd aləmlərin Rəbbi Allaha məxsusdur.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 3,
+      "ayahKey": "1:3",
+      "arabicText": "الرَّحْمَٰنِ الرَّحِيمِ",
+      "translation": "Mərhəmətli, Rəhmli olana.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 4,
+      "ayahKey": "1:4",
+      "arabicText": "مَالِكِ يَوْمِ الدِّينِ",
+      "translation": "Din gününün sahibinə.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 5,
+      "ayahKey": "1:5",
+      "arabicText": "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+      "translation": "Yalnız Sənə ibadət edir və yalnız Səndən kömək diləyirik.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 6,
+      "ayahKey": "1:6",
+      "arabicText": "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+      "translation": "Bizi doğru yola yönəlt.",
+      "audioUrl": "",
+      "durationMs": 4500
+    },
+    {
+      "ayahNumber": 7,
+      "ayahKey": "1:7",
+      "arabicText": "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
+      "translation": "Nemət verdiklərinin yoluna; qəzəbə uğrayanların və azanların yoluna yox.",
+      "audioUrl": "",
+      "durationMs": 6000
+    }
+  ]
+}

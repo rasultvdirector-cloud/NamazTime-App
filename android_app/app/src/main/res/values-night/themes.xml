@@ -1,0 +1,15 @@
+<resources>
+    <style name="Theme.MuslimTime.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#02572E</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.MuslimTime</item>
+    </style>
+
+    <style name="Theme.MuslimTime" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#81C784</item>
+        <item name="colorPrimaryVariant">#A5D6A7</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorSecondary">#FFD54F</item>
+        <item name="android:statusBarColor">#1B5E20</item>
+    </style>
+</resources>

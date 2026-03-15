@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".ui.DuaFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/qibla_screen_title"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dua_day_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp"
+            android:text="@string/qibla_screen_hint"
+            tools:text="Telefonu düz saxlayın və oxu qiblə istiqamətinə çevirin." />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/qibla_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/surface_soft_green"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/surface_soft_sand"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/qibla_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/qibla_title"
+                    android:textColor="@color/accent_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/qibla_mode_compass"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_qibla_mode_active"
+                        android:minWidth="92dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp"
+                        android:text="@string/qibla_mode_compass"
+                        android:textColor="@color/white"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/qibla_mode_map"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_qibla_mode_inactive"
+                        android:minWidth="92dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp"
+                        android:text="@string/qibla_mode_map"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qibla_mecca_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/qibla_mecca_label"
+                    android:textColor="@color/accent_primary"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:id="@+id/qibla_compass_container"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="10dp">
+
+                    <View
+                        android:id="@+id/qibla_alignment_halo"
+                        android:layout_width="156dp"
+                        android:layout_height="156dp"
+                        android:layout_gravity="center"
+                        android:alpha="0"
+                        android:background="@drawable/bg_qibla_alignment_halo"
+                        android:visibility="visible" />
+
+                    <FrameLayout
+                        android:id="@+id/qibla_rotating_layer"
+                        android:layout_width="220dp"
+                        android:layout_height="220dp">
+
+                        <ImageView
+                            android:id="@+id/qibla_ring"
+                            android:layout_width="220dp"
+                            android:layout_height="220dp"
+                            android:contentDescription="@string/qibla_title"
+                            android:src="@drawable/ic_compass_ring" />
+
+                        <ImageView
+                            android:id="@+id/qibla_mecca_marker"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_gravity="top|center_horizontal"
+                            android:contentDescription="@string/qibla_mecca_label"
+                            android:src="@drawable/ic_qibla_mecca_premium" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|center_horizontal"
+                            android:layout_marginTop="18dp"
+                            android:text="N"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical|end"
+                            android:layout_marginEnd="18dp"
+                            android:text="E"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:layout_marginBottom="18dp"
+                            android:text="S"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical|start"
+                            android:layout_marginStart="18dp"
+                            android:text="W"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </FrameLayout>
+
+                    <ImageView
+                        android:id="@+id/qibla_arrow"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/qibla_title"
+                        android:src="@drawable/ic_qibla_arrow"
+                        tools:rotation="0" />
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/qibla_map_container"
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:layout_marginTop="10dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="220dp"
+                        android:layout_height="220dp"
+                        android:background="@drawable/ic_compass_ring"
+                        android:alpha="0.25" />
+
+                    <FrameLayout
+                        android:id="@+id/qibla_map_route_layer"
+                        android:layout_width="220dp"
+                        android:layout_height="220dp">
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="86dp"
+                            android:layout_gravity="top|center_horizontal"
+                            android:layout_marginTop="24dp"
+                            android:background="@drawable/bg_qibla_route_line" />
+
+                        <ImageView
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_gravity="top|center_horizontal"
+                            android:layout_marginTop="4dp"
+                            android:contentDescription="@string/qibla_mecca_label"
+                            android:src="@drawable/ic_qibla_mecca_premium" />
+                    </FrameLayout>
+
+                    <View
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_qibla_user_dot" />
+
+                    <TextView
+                        android:id="@+id/qibla_user_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal|bottom"
+                        android:layout_marginBottom="34dp"
+                        android:background="@drawable/bg_qibla_status_neutral"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="@string/qibla_user_label"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="visible" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/qibla_degree_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="223°"
+                    android:textColor="@color/text_primary"
+                    android:textSize="34sp"
+                    android:textStyle="bold"
+                    tools:text="223°" />
+
+                <TextView
+                    android:id="@+id/qibla_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    tools:text="Qiblə istiqaməti tapılır..." />
+
+                <TextView
+                    android:id="@+id/qibla_accuracy_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_qibla_status_neutral"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="@string/qibla_status_searching"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/qibla_calibration_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_qibla_calibration_badge"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="@string/qibla_calibration_badge"
+                    android:textColor="@color/qibla_calibration_text"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/qibla_precise_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="@string/qibla_precise_hint"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/qibla_map_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="@string/qibla_map_hint"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/qibla_map_distance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Məkkəyə təxminən 2,240 km" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/surface_soft_blue"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/qibla_help_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/qibla_help_title"
+                    android:textColor="@color/accent_primary"
+                    android:textStyle="bold"
+                    tools:text="Necə istifadə etməli" />
+
+                <TextView
+                    android:id="@+id/qibla_help_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:text="@string/qibla_help_body"
+                    tools:text="Telefonu düz tutun. Oxun göstərdiyi istiqamət qiblədir." />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

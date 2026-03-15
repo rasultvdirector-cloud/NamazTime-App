@@ -1,0 +1,14 @@
+{
+  "reciter": {
+    "id": "local_stub",
+    "name": "Local Stub Reciter"
+  },
+  "items": [
+    {
+      "suraNumber": 1,
+      "nameArabic": "الفاتحة",
+      "nameLatin": "Al-Fatihah",
+      "ayahCount": 7
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NamazTime Legacy Notes</title>
+  <style>
+    :root {
+      --bg: #f6f4ed;
+      --surface: #fffdf8;
+      --text: #243126;
+      --muted: #647468;
+      --brand: #0f5a37;
+      --brand-soft: #e6f0ea;
+      --border: #d7e2d8;
+      --accent: #b8904f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #f8fbf8 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+    .hero, section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      box-shadow: 0 16px 44px rgba(15, 90, 55, 0.08);
+    }
+    .hero {
+      padding: 28px 24px;
+      margin-bottom: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(184, 144, 79, 0.10), transparent 36%),
+        radial-gradient(circle at top left, rgba(15, 90, 55, 0.08), transparent 32%),
+        var(--surface);
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      color: var(--brand);
+      font-size: 34px;
+      line-height: 1.15;
+    }
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    section {
+      margin-top: 16px;
+      padding: 22px 20px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      color: var(--brand);
+      font-size: 22px;
+    }
+    p { margin: 0 0 12px; }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li { margin-bottom: 8px; }
+    a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover { text-decoration: underline; }
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav {
+      margin-top: 14px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="badge">NamazTime</div>
+      <h1>Legacy Notes</h1>
+      <p class="meta">Son yenilənmə tarixi: 15 Mart 2026</p>
+      <div class="nav">
+        <a href="./index.html">Sənədlər ana səhifəsi</a>
+        <a href="./privacy-policy.html">Privacy Policy</a>
+      </div>
+    </div>
+
+    <section>
+      <h2>Bu səhifə nə üçündür</h2>
+      <p>Bu səhifədə tətbiq daxilində saxlanılan bəzi köhnə və uyğunluq yönümlü davranışların niyə hələ mövcud olduğu qısa şəkildə izah olunur.</p>
+    </section>
+
+    <section>
+      <h2>Legacy davranışlar</h2>
+      <ul>
+        <li>Bəzi ayarlar və lokal state əvvəlki tətbiq davranışları ilə uyğun qalmaq üçün saxlanılır.</li>
+        <li>Namaz vaxtı mənbəyi hissəsində müxtəlif fallback ssenariləri dəstəklənir ki, tətbiq tam dayanmasın.</li>
+        <li>Bəzi reminder və audio state məlumatları istifadə rahatlığı üçün lokal yaddaşda saxlanılır.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Niyə tam silinməyib</h2>
+      <p>Tətbiq inkişaf etdikcə bəzi köhnə məntiq qatları bir anda silinmir. Bunun əsas səbəbi istifadəçi ayarlarının pozulmaması, əvvəlki davranışlarla uyğunluğun qorunması və yeni versiyaya keçidin daha təhlükəsiz olmasıdır.</p>
+    </section>
+
+    <section>
+      <h2>Gələcək istiqamət</h2>
+      <p>NamazTime tədricən daha sadə, daha stabil və daha rahat istifadəyə uyğun arxitekturaya keçirilir. Legacy hissələr zamanla daha təmiz və daha az görünən formaya salınacaq.</p>
+      <p class="footer">Founder: Rasul Alakbarov</p>
+    </section>
+  </div>
+</body>
+</html>

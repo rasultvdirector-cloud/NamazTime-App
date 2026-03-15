@@ -1,0 +1,32 @@
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="app_bg">#FFF8F0</color>
+    <color name="surface_card">#FFFCF8</color>
+    <color name="surface_soft_blue">#EAEFF7</color>
+    <color name="surface_soft_sand">#F5EBDD</color>
+    <color name="surface_soft_green">#EEF6E8</color>
+    <color name="text_primary">#1E1B16</color>
+    <color name="text_secondary">#6E675D</color>
+    <color name="accent_primary">#7A4A22</color>
+    <color name="accent_secondary">#314763</color>
+    <color name="nav_selected">#8B5E34</color>
+    <color name="nav_unselected">#8A8175</color>
+    <color name="status_done_bg">#DDF2E1</color>
+    <color name="status_done_text">#22613A</color>
+    <color name="status_pending_bg">#F7DCDD</color>
+    <color name="status_pending_text">#8E2B32</color>
+    <color name="status_upcoming_bg">#EFE9DE</color>
+    <color name="status_upcoming_text">#6E675D</color>
+    <color name="active_card_stroke">#B98239</color>
+    <color name="active_card_bg">#FFF7EA</color>
+    <color name="timeline_line">#CDBDA6</color>
+    <color name="imsak_card_bg">#FFF6E8</color>
+    <color name="imsak_card_stroke">#D7B37B</color>
+    <color name="iftar_card_bg">#FFE7D2</color>
+    <color name="iftar_card_stroke">#D07A2D</color>
+    <color name="qibla_aligned_surface">#E4F5E7</color>
+    <color name="qibla_aligned_stroke">#2F7A45</color>
+    <color name="qibla_calibration_bg">#F8D9C8</color>
+    <color name="qibla_calibration_text">#A14A13</color>
+</resources>
