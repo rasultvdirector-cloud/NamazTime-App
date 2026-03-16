@@ -1,8 +1,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="app_bg">#FFF8F0</color>
-    <color name="surface_card">#FFFCF8</color>
+    <color name="status_bar_dark">#1B5E20</color>
+    <color name="app_bg">#F1E7D8</color>
+    <color name="surface_card">#F8F0E5</color>
     <color name="surface_soft_blue">#EAEFF7</color>
     <color name="surface_soft_sand">#F5EBDD</color>
     <color name="surface_soft_green">#EEF6E8</color>

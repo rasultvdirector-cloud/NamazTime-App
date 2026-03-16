@@ -12,14 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="@dimen/prayer_header_padding">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#FFF1DD"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="@dimen/prayer_header_padding">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -40,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:textColor="#1E1B16"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/prayer_date_text"
                     android:textStyle="bold"
                     tools:text="6 mart" />
             </LinearLayout>
@@ -64,7 +64,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:textColor="#1E1B16"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/prayer_date_text"
                     android:textStyle="bold"
                     tools:text="10 ramazan" />
             </LinearLayout>
@@ -85,7 +85,7 @@
             android:layout_marginTop="6dp"
             android:background="#EAEFF7"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/prayer_header_padding">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -95,8 +95,8 @@
 
                 <ImageButton
                     android:id="@+id/date_prev_button"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="@dimen/prayer_nav_button_size"
+                    android:layout_height="@dimen/prayer_nav_button_size"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/prayer_prev_day"
                     android:src="@android:drawable/ic_media_previous" />
@@ -108,27 +108,27 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:textColor="#1E1B16"
-                    android:textSize="15sp"
+                    android:textSize="@dimen/prayer_selected_day_text"
                     android:textStyle="bold"
                     tools:text="Bu gün" />
 
                 <Button
                     android:id="@+id/date_today_button"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:minHeight="32dp"
+                    android:layout_height="@dimen/prayer_today_button_height"
+                    android:minHeight="@dimen/prayer_today_button_height"
                     android:minWidth="0dp"
                     android:paddingStart="10dp"
                     android:paddingTop="0dp"
                     android:paddingEnd="10dp"
                     android:paddingBottom="2dp"
                     android:text="@string/prayer_today_button"
-                    android:textSize="10sp" />
+                    android:textSize="@dimen/prayer_today_button_text" />
 
                 <ImageButton
                     android:id="@+id/date_next_button"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="@dimen/prayer_nav_button_size"
+                    android:layout_height="@dimen/prayer_nav_button_size"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/prayer_next_day"
                     android:src="@android:drawable/ic_media_next" />
@@ -146,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/local_time_label"
                     android:textColor="#4A5B78"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/prayer_label_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -156,7 +156,7 @@
                     android:layout_marginStart="8dp"
                     android:tag="no_scale_text"
                     android:textColor="#18212D"
-                    android:textSize="24sp"
+                    android:textSize="@dimen/prayer_local_time_text"
                     android:textStyle="bold"
                     tools:text="15:52:08" />
             </LinearLayout>
@@ -167,14 +167,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="#314763"
-                android:textSize="13sp"
+                android:textSize="@dimen/prayer_next_text"
                 android:textStyle="bold"
                 tools:text="Esr namazina 01:21 qalib" />
 
             <FrameLayout
                 android:id="@+id/timeline_section"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
+                android:layout_height="@dimen/prayer_timeline_height"
                 android:layout_marginTop="6dp">
 
                 <View
@@ -203,8 +203,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_1"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -212,7 +212,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="Sübh" />
                     </LinearLayout>
 
@@ -225,8 +225,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_2"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -234,7 +234,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="Gün" />
                     </LinearLayout>
 
@@ -247,8 +247,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_3"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -256,7 +256,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="Zöhr" />
                     </LinearLayout>
 
@@ -269,8 +269,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_4"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -278,7 +278,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="Əsr" />
                     </LinearLayout>
 
@@ -291,8 +291,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_5"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -300,7 +300,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="Məğrib" />
                     </LinearLayout>
 
@@ -313,8 +313,8 @@
 
                         <View
                             android:id="@+id/timeline_dot_6"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="@dimen/prayer_timeline_dot"
+                            android:layout_height="@dimen/prayer_timeline_dot"
                             android:background="@android:color/darker_gray" />
 
                         <TextView
@@ -322,7 +322,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/prayer_timeline_label"
                             tools:text="İşa" />
                     </LinearLayout>
                 </LinearLayout>
@@ -341,7 +341,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_1"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_fajr"
                 android:clipToOutline="true">
@@ -356,7 +356,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <TextView
                         android:id="@+id/prayer_name_1"
@@ -367,7 +367,7 @@
                         android:tag="no_scale_text"
                         android:textAlignment="center"
                         android:textColor="#6F4B24"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/prayer_card_title_text"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -381,7 +381,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#1A232D"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@+id/prayer_status_1"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -399,7 +399,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#8B5E34"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -411,7 +411,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_2"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_sunrise"
                 android:clipToOutline="true">
@@ -426,7 +426,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <LinearLayout
                         android:id="@+id/prayer_name_row_2"
@@ -440,8 +440,8 @@
                         app:layout_constraintTop_toTopOf="parent">
 
                         <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
+                            android:layout_width="@dimen/prayer_card_icon_size"
+                            android:layout_height="@dimen/prayer_card_icon_size"
                             android:contentDescription="@string/prayer_name_sunrise"
                             android:src="@drawable/ic_sunrise" />
 
@@ -452,7 +452,7 @@
                             android:layout_marginStart="6dp"
                             android:tag="no_scale_text"
                             android:textColor="#5A4D22"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/prayer_card_title_text"
                             android:textStyle="bold"
                             tools:text="Gün doğumu" />
                     </LinearLayout>
@@ -464,7 +464,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#2B251B"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@id/prayer_status_2"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -483,7 +483,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#456244"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -495,7 +495,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_3"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_dhuhr"
                 android:clipToOutline="true">
@@ -510,7 +510,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <TextView
                         android:id="@+id/prayer_name_3"
@@ -521,7 +521,7 @@
                         android:tag="no_scale_text"
                         android:textAlignment="center"
                         android:textColor="#234F78"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/prayer_card_title_text"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -535,7 +535,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#0F2436"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@id/prayer_status_3"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -554,7 +554,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#355B87"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -566,7 +566,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_4"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_asr"
                 android:clipToOutline="true">
@@ -581,7 +581,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <TextView
                         android:id="@+id/prayer_name_4"
@@ -592,7 +592,7 @@
                         android:tag="no_scale_text"
                         android:textAlignment="center"
                         android:textColor="#6A4356"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/prayer_card_title_text"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -606,7 +606,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#2E2119"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@id/prayer_status_4"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -625,7 +625,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#7A4F78"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -637,7 +637,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_5"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_maghrib"
                 android:clipToOutline="true">
@@ -652,7 +652,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <TextView
                         android:id="@+id/prayer_name_5"
@@ -663,7 +663,7 @@
                         android:tag="no_scale_text"
                         android:textAlignment="center"
                         android:textColor="#FFF0C5"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/prayer_card_title_text"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -677,7 +677,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#FFF8F1"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@id/prayer_status_5"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -696,7 +696,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#A45A20"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -708,7 +708,7 @@
             <FrameLayout
                 android:id="@+id/prayer_card_6"
                 android:layout_width="0dp"
-                android:layout_height="115dp"
+                android:layout_height="@dimen/prayer_card_height"
                 android:layout_columnWeight="1"
                 android:background="@drawable/bg_prayer_isha"
                 android:clipToOutline="true">
@@ -723,7 +723,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="7dp">
+                    android:padding="@dimen/prayer_card_inner_padding">
 
                     <TextView
                         android:id="@+id/prayer_name_6"
@@ -734,7 +734,7 @@
                         android:tag="no_scale_text"
                         android:textAlignment="center"
                         android:textColor="#D4DFFF"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/prayer_card_title_text"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -748,7 +748,7 @@
                         android:gravity="center"
                         android:tag="no_scale_text"
                         android:textColor="#F7FAFF"
-                        android:textSize="55sp"
+                        android:textSize="@dimen/prayer_card_time_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toTopOf="@id/prayer_status_6"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -767,7 +767,7 @@
                         android:paddingEnd="8dp"
                         android:paddingBottom="3dp"
                         android:textColor="#5B56A7"
-                        android:textSize="8sp"
+                        android:textSize="@dimen/prayer_card_state_text"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -784,14 +784,14 @@
             android:layout_marginTop="6dp"
             android:background="#F5EBDD"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/prayer_header_padding">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/today_imsak_iftar_title"
                 android:textColor="#8B5E34"
-                android:textSize="12sp"
+                android:textSize="@dimen/prayer_summary_label_text"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -802,7 +802,7 @@
 
                 <FrameLayout
                     android:layout_width="0dp"
-                    android:layout_height="88dp"
+                    android:layout_height="@dimen/prayer_summary_card_height"
                     android:layout_weight="1"
                     android:background="@drawable/bg_imsak_card"
                     android:clipToOutline="true">
@@ -817,7 +817,7 @@
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:padding="8dp">
+                        android:padding="@dimen/prayer_header_padding">
 
                         <TextView
                             android:id="@+id/today_imsak_label_text"
@@ -828,7 +828,7 @@
                             android:text="@string/today_imsak_label"
                             android:textAlignment="center"
                             android:textColor="#7A4A22"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/prayer_summary_label_text"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -845,7 +845,7 @@
                             android:maxLines="1"
                             android:tag="no_scale_text"
                             android:textColor="#1E1B16"
-                            android:textSize="55sp"
+                            android:textSize="@dimen/prayer_card_time_text"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -858,7 +858,7 @@
 
                 <FrameLayout
                     android:layout_width="0dp"
-                    android:layout_height="88dp"
+                    android:layout_height="@dimen/prayer_summary_card_height"
                     android:layout_weight="1"
                     android:layout_marginStart="6dp"
                     android:background="@drawable/bg_iftar_card"
@@ -874,7 +874,7 @@
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:padding="8dp">
+                        android:padding="@dimen/prayer_header_padding">
 
                         <TextView
                             android:id="@+id/today_iftar_label_text"
@@ -885,7 +885,7 @@
                             android:text="@string/today_iftar_label"
                             android:textAlignment="center"
                             android:textColor="#A45A20"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/prayer_summary_label_text"
                             android:textStyle="bold"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -902,7 +902,7 @@
                             android:maxLines="1"
                             android:tag="no_scale_text"
                             android:textColor="#1E1B16"
-                            android:textSize="55sp"
+                            android:textSize="@dimen/prayer_card_time_text"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"

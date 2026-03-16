@@ -12,14 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/screen_page_padding">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/quran_section_title"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="@dimen/screen_title_text"
             android:textStyle="bold" />
 
         <TextView
@@ -29,12 +29,12 @@
             android:layout_marginTop="6dp"
             android:text="@string/quran_section_subtitle"
             android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textSize="@dimen/quran_entry_subtitle_text" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_read_quran"
             android:layout_width="match_parent"
-            android:layout_height="132dp"
+            android:layout_height="@dimen/quran_entry_card_height"
             android:layout_marginTop="16dp"
             android:clickable="true"
             android:focusable="true"
@@ -51,11 +51,11 @@
                 android:background="@drawable/bg_quran_entry_read"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="20dp">
+                android:padding="@dimen/quran_entry_card_padding">
 
                 <ImageView
-                    android:layout_width="74dp"
-                    android:layout_height="74dp"
+                    android:layout_width="@dimen/quran_entry_icon_size"
+                    android:layout_height="@dimen/quran_entry_icon_size"
                     android:alpha="0.96"
                     android:src="@drawable/ic_quran_book"
                     app:tint="@color/white" />
@@ -73,7 +73,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/quran_read_card_title"
                         android:textColor="@color/white"
-                        android:textSize="22sp"
+                        android:textSize="@dimen/quran_entry_title_text"
                         android:textStyle="bold" />
 
                     <TextView
@@ -83,7 +83,7 @@
                         android:layout_marginTop="6dp"
                         android:text="@string/quran_read_card_subtitle"
                         android:textColor="#F7EED6"
-                        android:textSize="14sp" />
+                        android:textSize="@dimen/quran_entry_subtitle_text" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -91,7 +91,7 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_audio_quran"
             android:layout_width="match_parent"
-            android:layout_height="132dp"
+            android:layout_height="@dimen/quran_entry_card_height"
             android:layout_marginTop="14dp"
             android:clickable="true"
             android:focusable="true"
@@ -108,11 +108,11 @@
                 android:background="@drawable/bg_quran_entry_listen"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="20dp">
+                android:padding="@dimen/quran_entry_card_padding">
 
                 <ImageView
-                    android:layout_width="74dp"
-                    android:layout_height="74dp"
+                    android:layout_width="@dimen/quran_entry_icon_size"
+                    android:layout_height="@dimen/quran_entry_icon_size"
                     android:alpha="0.98"
                     android:src="@drawable/ic_quran_listen"
                     app:tint="@color/white" />
@@ -130,7 +130,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/quran_audio_tab"
                         android:textColor="@color/white"
-                        android:textSize="22sp"
+                        android:textSize="@dimen/quran_entry_title_text"
                         android:textStyle="bold" />
 
                     <TextView
@@ -140,7 +140,7 @@
                         android:layout_marginTop="6dp"
                         android:text="@string/quran_audio_card_subtitle"
                         android:textColor="#EAF4EF"
-                        android:textSize="14sp" />
+                        android:textSize="@dimen/quran_entry_subtitle_text" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -148,7 +148,7 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_allah_names"
             android:layout_width="match_parent"
-            android:layout_height="132dp"
+            android:layout_height="@dimen/quran_entry_card_height"
             android:layout_marginTop="14dp"
             android:clickable="true"
             android:focusable="true"
@@ -165,15 +165,15 @@
                 android:background="@drawable/bg_quran_entry_names"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="20dp">
+                android:padding="@dimen/quran_entry_card_padding">
 
                 <TextView
-                    android:layout_width="74dp"
-                    android:layout_height="74dp"
+                    android:layout_width="@dimen/quran_entry_icon_size"
+                    android:layout_height="@dimen/quran_entry_icon_size"
                     android:gravity="center"
                     android:text="الله"
                     android:textColor="@color/white"
-                    android:textSize="28sp"
+                    android:textSize="@dimen/quran_entry_arabic_text"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -189,7 +189,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/quran_allah_names_tab"
                         android:textColor="@color/white"
-                        android:textSize="22sp"
+                        android:textSize="@dimen/quran_entry_title_text"
                         android:textStyle="bold" />
 
                     <TextView
@@ -199,7 +199,7 @@
                         android:layout_marginTop="6dp"
                         android:text="@string/quran_allah_names_card_subtitle"
                         android:textColor="#F9F0DA"
-                        android:textSize="16sp" />
+                        android:textSize="@dimen/screen_subtitle_text" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -217,7 +217,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/screen_page_padding">
 
                 <TextView
                     android:id="@+id/quran_mode_title"
@@ -225,7 +225,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/quran_read_card_title"
                     android:textColor="@color/text_primary"
-                    android:textSize="20sp"
+                    android:textSize="@dimen/quran_content_title_text"
                     android:textStyle="bold" />
 
                 <TextView
@@ -306,7 +306,7 @@
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_quran_audio_panel"
                             android:orientation="vertical"
-                            android:padding="16dp">
+                            android:padding="@dimen/screen_page_padding">
 
                             <FrameLayout
                                 android:layout_width="match_parent"

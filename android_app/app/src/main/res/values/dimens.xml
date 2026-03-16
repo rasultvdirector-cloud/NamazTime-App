@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="screen_page_padding">12dp</dimen>
+    <dimen name="screen_card_padding">14dp</dimen>
+    <dimen name="screen_section_gap">12dp</dimen>
+    <dimen name="screen_title_text">22sp</dimen>
+    <dimen name="screen_subtitle_text">15sp</dimen>
+
+    <dimen name="prayer_header_padding">8dp</dimen>
+    <dimen name="prayer_date_text">17sp</dimen>
+    <dimen name="prayer_label_text">14sp</dimen>
+    <dimen name="prayer_selected_day_text">14sp</dimen>
+    <dimen name="prayer_today_button_height">30dp</dimen>
+    <dimen name="prayer_today_button_text">10sp</dimen>
+    <dimen name="prayer_nav_button_size">28dp</dimen>
+    <dimen name="prayer_local_time_text">22sp</dimen>
+    <dimen name="prayer_next_text">12sp</dimen>
+    <dimen name="prayer_timeline_height">34dp</dimen>
+    <dimen name="prayer_timeline_dot">9dp</dimen>
+    <dimen name="prayer_timeline_label">8sp</dimen>
+    <dimen name="prayer_card_height">108dp</dimen>
+    <dimen name="prayer_card_inner_padding">7dp</dimen>
+    <dimen name="prayer_card_title_text">18sp</dimen>
+    <dimen name="prayer_card_time_text">50sp</dimen>
+    <dimen name="prayer_card_state_text">9sp</dimen>
+    <dimen name="prayer_card_icon_size">18dp</dimen>
+    <dimen name="prayer_summary_card_height">84dp</dimen>
+    <dimen name="prayer_summary_label_text">11sp</dimen>
+    <dimen name="prayer_summary_time_text">50sp</dimen>
+
+    <dimen name="quran_entry_card_height">124dp</dimen>
+    <dimen name="quran_entry_card_padding">16dp</dimen>
+    <dimen name="quran_entry_icon_size">64dp</dimen>
+    <dimen name="quran_entry_arabic_icon_size">64dp</dimen>
+    <dimen name="quran_entry_title_text">20sp</dimen>
+    <dimen name="quran_entry_subtitle_text">13sp</dimen>
+    <dimen name="quran_entry_arabic_text">24sp</dimen>
+    <dimen name="quran_content_title_text">18sp</dimen>
+
+    <dimen name="quran_list_item_padding">13dp</dimen>
+    <dimen name="quran_list_badge_size">40dp</dimen>
+    <dimen name="quran_list_title_text">17sp</dimen>
+    <dimen name="quran_list_meta_text">12sp</dimen>
+    <dimen name="quran_list_action_width">72dp</dimen>
+    <dimen name="quran_list_action_height">38dp</dimen>
+    <dimen name="quran_list_action_text">13sp</dimen>
+
+    <dimen name="quran_audio_ayah_padding">14dp</dimen>
+    <dimen name="quran_audio_arabic_text">23sp</dimen>
+    <dimen name="quran_audio_translation_text">14sp</dimen>
+
+    <dimen name="allah_item_padding">13dp</dimen>
+    <dimen name="allah_item_badge_size">40dp</dimen>
+    <dimen name="allah_item_title_text">17sp</dimen>
+    <dimen name="allah_item_meta_text">13sp</dimen>
+    <dimen name="allah_item_arabic_text">24sp</dimen>
+
+    <dimen name="qibla_card_padding">14dp</dimen>
+    <dimen name="qibla_mode_padding_horizontal">14dp</dimen>
+    <dimen name="qibla_mode_padding_vertical">8dp</dimen>
+    <dimen name="qibla_mode_min_width">84dp</dimen>
+    <dimen name="qibla_compass_size">196dp</dimen>
+    <dimen name="qibla_halo_size">140dp</dimen>
+    <dimen name="qibla_marker_size">40dp</dimen>
+    <dimen name="qibla_ring_label_text">11sp</dimen>
+    <dimen name="qibla_arrow_size">108dp</dimen>
+    <dimen name="qibla_map_route_width">4dp</dimen>
+    <dimen name="qibla_map_route_height">78dp</dimen>
+    <dimen name="qibla_map_marker_size">34dp</dimen>
+    <dimen name="qibla_user_dot_size">16dp</dimen>
+    <dimen name="qibla_degree_text">30sp</dimen>
+    <dimen name="qibla_status_text">14sp</dimen>
+</resources>

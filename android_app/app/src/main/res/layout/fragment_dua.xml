@@ -11,14 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/screen_page_padding">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/qibla_screen_title"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="@dimen/screen_title_text"
             android:textStyle="bold" />
 
         <TextView
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:textColor="@color/text_secondary"
-            android:textSize="16sp"
+            android:textSize="@dimen/screen_subtitle_text"
             android:text="@string/qibla_screen_hint"
             tools:text="Telefonu düz saxlayın və oxu qiblə istiqamətinə çevirin." />
 
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_soft_green"
-            app:cardCornerRadius="18dp"
+            app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
             app:strokeColor="@color/surface_soft_sand"
             app:strokeWidth="1dp">
@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/screen_page_padding">
 
                 <TextView
                     android:id="@+id/qibla_title"
@@ -55,7 +55,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/qibla_title"
                     android:textColor="@color/accent_primary"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/quran_content_title_text"
                     android:textStyle="bold" />
 
                 <LinearLayout
@@ -70,10 +70,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_qibla_mode_active"
-                        android:minWidth="92dp"
+                        android:minWidth="@dimen/qibla_mode_min_width"
                         android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="@dimen/qibla_mode_padding_horizontal"
+                        android:paddingVertical="@dimen/qibla_mode_padding_vertical"
                         android:text="@string/qibla_mode_compass"
                         android:textColor="@color/white"
                         android:textStyle="bold" />
@@ -84,10 +84,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:background="@drawable/bg_qibla_mode_inactive"
-                        android:minWidth="92dp"
+                        android:minWidth="@dimen/qibla_mode_min_width"
                         android:gravity="center"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="@dimen/qibla_mode_padding_horizontal"
+                        android:paddingVertical="@dimen/qibla_mode_padding_vertical"
                         android:text="@string/qibla_mode_map"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold" />
@@ -104,14 +104,14 @@
 
                 <FrameLayout
                     android:id="@+id/qibla_compass_container"
-                    android:layout_width="220dp"
-                    android:layout_height="220dp"
+                    android:layout_width="@dimen/qibla_compass_size"
+                    android:layout_height="@dimen/qibla_compass_size"
                     android:layout_marginTop="10dp">
 
                     <View
                         android:id="@+id/qibla_alignment_halo"
-                        android:layout_width="156dp"
-                        android:layout_height="156dp"
+                        android:layout_width="@dimen/qibla_halo_size"
+                        android:layout_height="@dimen/qibla_halo_size"
                         android:layout_gravity="center"
                         android:alpha="0"
                         android:background="@drawable/bg_qibla_alignment_halo"
@@ -119,20 +119,20 @@
 
                     <FrameLayout
                         android:id="@+id/qibla_rotating_layer"
-                        android:layout_width="220dp"
-                        android:layout_height="220dp">
+                        android:layout_width="@dimen/qibla_compass_size"
+                        android:layout_height="@dimen/qibla_compass_size">
 
                         <ImageView
                             android:id="@+id/qibla_ring"
-                            android:layout_width="220dp"
-                            android:layout_height="220dp"
+                            android:layout_width="@dimen/qibla_compass_size"
+                            android:layout_height="@dimen/qibla_compass_size"
                             android:contentDescription="@string/qibla_title"
                             android:src="@drawable/ic_compass_ring" />
 
                         <ImageView
                             android:id="@+id/qibla_mecca_marker"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
+                            android:layout_width="@dimen/qibla_marker_size"
+                            android:layout_height="@dimen/qibla_marker_size"
                             android:layout_gravity="top|center_horizontal"
                             android:contentDescription="@string/qibla_mecca_label"
                             android:src="@drawable/ic_qibla_mecca_premium" />
@@ -144,7 +144,7 @@
                             android:layout_marginTop="18dp"
                             android:text="N"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -154,7 +154,7 @@
                             android:layout_marginEnd="18dp"
                             android:text="E"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -164,7 +164,7 @@
                             android:layout_marginBottom="18dp"
                             android:text="S"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
 
                         <TextView
@@ -174,14 +174,14 @@
                             android:layout_marginStart="18dp"
                             android:text="W"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
                     </FrameLayout>
 
                     <ImageView
                         android:id="@+id/qibla_arrow"
-                        android:layout_width="120dp"
-                        android:layout_height="120dp"
+                        android:layout_width="@dimen/qibla_arrow_size"
+                        android:layout_height="@dimen/qibla_arrow_size"
                         android:layout_gravity="center"
                         android:contentDescription="@string/qibla_title"
                         android:src="@drawable/ic_qibla_arrow"
@@ -190,32 +190,32 @@
 
                 <FrameLayout
                     android:id="@+id/qibla_map_container"
-                    android:layout_width="220dp"
-                    android:layout_height="220dp"
+                    android:layout_width="@dimen/qibla_compass_size"
+                    android:layout_height="@dimen/qibla_compass_size"
                     android:layout_marginTop="10dp"
                     android:visibility="gone">
 
                     <View
-                        android:layout_width="220dp"
-                        android:layout_height="220dp"
+                        android:layout_width="@dimen/qibla_compass_size"
+                        android:layout_height="@dimen/qibla_compass_size"
                         android:background="@drawable/ic_compass_ring"
                         android:alpha="0.25" />
 
                     <FrameLayout
                         android:id="@+id/qibla_map_route_layer"
-                        android:layout_width="220dp"
-                        android:layout_height="220dp">
+                        android:layout_width="@dimen/qibla_compass_size"
+                        android:layout_height="@dimen/qibla_compass_size">
 
                         <View
-                            android:layout_width="4dp"
-                            android:layout_height="86dp"
+                            android:layout_width="@dimen/qibla_map_route_width"
+                            android:layout_height="@dimen/qibla_map_route_height"
                             android:layout_gravity="top|center_horizontal"
                             android:layout_marginTop="24dp"
                             android:background="@drawable/bg_qibla_route_line" />
 
                         <ImageView
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="@dimen/qibla_map_marker_size"
+                            android:layout_height="@dimen/qibla_map_marker_size"
                             android:layout_gravity="top|center_horizontal"
                             android:layout_marginTop="4dp"
                             android:contentDescription="@string/qibla_mecca_label"
@@ -223,8 +223,8 @@
                     </FrameLayout>
 
                     <View
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
+                        android:layout_width="@dimen/qibla_user_dot_size"
+                        android:layout_height="@dimen/qibla_user_dot_size"
                         android:layout_gravity="center"
                         android:background="@drawable/bg_qibla_user_dot" />
 
@@ -239,7 +239,7 @@
                         android:paddingVertical="4dp"
                         android:text="@string/qibla_user_label"
                         android:textColor="@color/text_primary"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/qibla_ring_label_text"
                         android:textStyle="bold"
                         android:visibility="visible" />
                 </FrameLayout>
@@ -251,7 +251,7 @@
                     android:layout_marginTop="14dp"
                     android:text="223°"
                     android:textColor="@color/text_primary"
-                    android:textSize="34sp"
+                    android:textSize="@dimen/qibla_degree_text"
                     android:textStyle="bold"
                     tools:text="223°" />
 
@@ -263,7 +263,7 @@
                     android:gravity="center"
                     android:lineSpacingExtra="4dp"
                     android:textColor="@color/text_primary"
-                    android:textSize="17sp"
+                    android:textSize="@dimen/qibla_status_text"
                     tools:text="Qiblə istiqaməti tapılır..." />
 
                 <TextView
@@ -299,7 +299,7 @@
                     android:gravity="center"
                     android:text="@string/qibla_precise_hint"
                     android:textColor="@color/text_secondary"
-                    android:textSize="15sp" />
+                    android:textSize="@dimen/qibla_status_text" />
 
                 <TextView
                     android:id="@+id/qibla_map_hint"
@@ -309,7 +309,7 @@
                     android:gravity="center"
                     android:text="@string/qibla_map_hint"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/qibla_ring_label_text"
                     android:visibility="gone" />
 
                 <TextView
@@ -319,7 +319,7 @@
                     android:layout_marginTop="6dp"
                     android:gravity="center"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/qibla_ring_label_text"
                     android:visibility="gone"
                     tools:text="Məkkəyə təxminən 2,240 km" />
             </LinearLayout>
@@ -330,14 +330,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_soft_blue"
-            app:cardCornerRadius="18dp"
+            app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/screen_page_padding">
 
                 <TextView
                     android:id="@+id/qibla_help_title"
@@ -355,7 +355,7 @@
                     android:layout_marginTop="10dp"
                     android:lineSpacingExtra="4dp"
                     android:textColor="@color/text_primary"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/quran_content_title_text"
                     android:text="@string/qibla_help_body"
                     tools:text="Telefonu düz tutun. Oxun göstərdiyi istiqamət qiblədir." />
             </LinearLayout>

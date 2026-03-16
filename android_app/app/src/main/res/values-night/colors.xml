@@ -1,0 +1,15 @@
+<resources>
+    <color name="app_bg">#DCCFC1</color>
+    <color name="surface_card">#E7DCCF</color>
+    <color name="surface_soft_blue">#C8CCD4</color>
+    <color name="surface_soft_sand">#D8CABA</color>
+    <color name="surface_soft_green">#CFD9CB</color>
+    <color name="text_primary">#201B17</color>
+    <color name="text_secondary">#5E564E</color>
+    <color name="nav_selected">#8B5E34</color>
+    <color name="nav_unselected">#7A7167</color>
+    <color name="status_upcoming_bg">#D7C9B8</color>
+    <color name="status_upcoming_text">#5E564E</color>
+    <color name="active_card_bg">#E8DAC8</color>
+    <color name="timeline_line">#A99680</color>
+</resources>

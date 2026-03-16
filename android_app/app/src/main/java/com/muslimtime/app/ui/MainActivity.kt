@@ -52,6 +52,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.gms.location.LocationServices
@@ -101,6 +105,7 @@ import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var rootView: View
     private lateinit var pager: ViewPager2
     private lateinit var nav: BottomNavigationView
     private var setupMode = false
@@ -131,8 +136,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        rootView = findViewById(R.id.main_root)
         pager = findViewById(R.id.pager)
         nav = findViewById(R.id.bottom_nav)
+
+        applySystemBarStyle()
+        applySystemBarInsets()
 
         pager.adapter = DashboardPagerAdapter(this)
         pager.isUserInputEnabled = false
@@ -180,6 +189,36 @@ class MainActivity : AppCompatActivity() {
         }
 
         maybeStartPermissionOnboarding()
+    }
+
+    private fun applySystemBarStyle() {
+        window.statusBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.isAppearanceLightStatusBars = true
+        controller.isAppearanceLightNavigationBars = true
+    }
+
+    private fun applySystemBarInsets() {
+        val originalTop = rootView.paddingTop
+        val originalBottom = nav.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            rootView.setPadding(
+                rootView.paddingLeft,
+                originalTop + systemBars.top,
+                rootView.paddingRight,
+                rootView.paddingBottom,
+            )
+            nav.setPadding(
+                nav.paddingLeft,
+                nav.paddingTop,
+                nav.paddingRight,
+                originalBottom + systemBars.bottom,
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(rootView)
     }
 
     private fun ensureDefaultAppSetupState() {
@@ -333,13 +372,18 @@ private fun applyScaledTextTree(view: View, scale: Float) {
             ?: (view.textSize / scaledDensity).also {
                 view.setTag(R.id.tag_original_text_size_sp, it)
             }
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, originalSp * scale)
+        setScaledTextSizeIgnoringSystemFont(view, originalSp, scale)
     }
     if (view is ViewGroup) {
         for (i in 0 until view.childCount) {
             applyScaledTextTree(view.getChildAt(i), scale)
         }
     }
+}
+
+private fun setScaledTextSizeIgnoringSystemFont(view: TextView, baseSp: Float, scale: Float) {
+    val density = view.resources.displayMetrics.density
+    view.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseSp * scale * density)
 }
 
 private fun applySharedUiPreferences(root: View, context: Context) {
@@ -1061,11 +1105,11 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                     itemView.findViewById<TextView>(R.id.verse_title).text = verse.title
                     itemView.findViewById<TextView>(R.id.verse_arabic).apply {
                         text = verse.arabic
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, (currentReadFontSp + 4f) * appFontScale)
+                        setScaledTextSizeIgnoringSystemFont(this, currentReadFontSp + 4f, appFontScale)
                     }
                     itemView.findViewById<TextView>(R.id.verse_translation).apply {
                         text = verse.translation
-                        setTextSize(TypedValue.COMPLEX_UNIT_SP, currentReadFontSp * appFontScale)
+                        setScaledTextSizeIgnoringSystemFont(this, currentReadFontSp, appFontScale)
                     }
                     return itemView
                 }
