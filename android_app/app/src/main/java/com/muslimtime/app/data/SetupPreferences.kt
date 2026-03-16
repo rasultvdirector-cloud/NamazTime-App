@@ -84,12 +84,6 @@ internal object SetupPreferences {
         ) {
             return false
         }
-        if (!ReminderPreferences.areRemindersGloballyEnabled(context) ||
-            ReminderPreferences.reminderEnabledKeys().indices.none { ReminderPreferences.isReminderEnabled(context, it) }
-        ) {
-            return false
-        }
-
         val locationReady = if (PrayerSourcePreferences.isAutoLocationEnabled(context)) {
             locationGranted
         } else {

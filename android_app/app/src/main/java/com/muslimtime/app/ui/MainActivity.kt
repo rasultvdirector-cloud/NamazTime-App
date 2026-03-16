@@ -158,37 +158,42 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        if (!PrayerPreferences.hasCompletedInitialSetup(this) && PrayerPreferences.isInitialSetupSatisfied(this)) {
-            PrayerPreferences.setInitialSetupComplete(this, true)
+        ensureDefaultAppSetupState()
+        setupMode = false
+        nav.visibility = View.VISIBLE
+        nav.selectedItemId = R.id.nav_prayer
+        PrayerRefreshScheduler.scheduleNextJumaaReminder(this)
+        if (PrayerDataSyncManager.shouldUseDailyRefreshAlarm(this)) {
+            PrayerRefreshScheduler.scheduleNextDailyRefresh(this)
         }
-        setupMode = !PrayerPreferences.hasCompletedInitialSetup(this)
-        if (setupMode) {
-            nav.visibility = View.GONE
-            pager.currentItem = 3
-            nav.selectedItemId = R.id.nav_timer
-            showSetupRequiredDialog()
+        if (PrayerDataSyncManager.shouldUsePeriodicWorker(this)) {
+            PrayerTimesRefreshWorker.schedule(this)
         } else {
-            nav.visibility = View.VISIBLE
-            nav.selectedItemId = R.id.nav_prayer
-            PrayerRefreshScheduler.scheduleNextJumaaReminder(this)
-            if (PrayerDataSyncManager.shouldUseDailyRefreshAlarm(this)) {
-                PrayerRefreshScheduler.scheduleNextDailyRefresh(this)
-            }
-            if (PrayerDataSyncManager.shouldUsePeriodicWorker(this)) {
-                PrayerTimesRefreshWorker.schedule(this)
-            } else {
-                PrayerTimesRefreshWorker.cancel(this)
-            }
-            PrayerPreferences.loadSelectedPrayerTimes(this)?.let(::scheduleReminderSet)
-            if (PrayerDataSyncManager.needsSync(this)) {
-                PrayerTimesRefreshWorker.enqueueImmediate(this)
-            }
-            if (PrayerPreferences.isAutoLocationEnabled(this)) {
-                (supportFragmentManager.findFragmentByTag("f3") as? TimerFragment)?.refreshAutoLocationIfEnabled()
-            }
+            PrayerTimesRefreshWorker.cancel(this)
+        }
+        PrayerPreferences.loadSelectedPrayerTimes(this)?.let(::scheduleReminderSet)
+        if (PrayerDataSyncManager.needsSync(this)) {
+            PrayerTimesRefreshWorker.enqueueImmediate(this)
+        }
+        if (PrayerPreferences.isAutoLocationEnabled(this)) {
+            (supportFragmentManager.findFragmentByTag("f3") as? TimerFragment)?.refreshAutoLocationIfEnabled()
         }
 
         maybeStartPermissionOnboarding()
+    }
+
+    private fun ensureDefaultAppSetupState() {
+        val defaultLocation = PrayerPreferences.loadSelectedLocation(this) ?: PrayerPreferences.suggestedLocation(this)
+        if (PrayerPreferences.loadSelectedLocation(this) == null) {
+            PrayerPreferences.saveLocation(this, defaultLocation, isAutoDetected = false)
+        }
+        if (!PrayerPreferences.hasCompletedInitialSetup(this)) {
+            PrayerPreferences.setInitialSetupComplete(this, true)
+            PrayerPreferences.setProfileSetupCompleted(this, true)
+            PrayerPreferences.setNotificationSetupCompleted(this, true)
+            PrayerPreferences.setLocationSetupCompleted(this, true)
+            PrayerPreferences.setSoundSetupCompleted(this, true)
+        }
     }
 
     private fun applySavedThemeMode() {
@@ -224,18 +229,7 @@ class MainActivity : AppCompatActivity() {
     private fun maybeStartPermissionOnboarding() {
         if (PrayerPreferences.hasCompletedPermissionOnboarding(this) || permissionOnboardingRunning) return
         permissionOnboardingRunning = true
-        AlertDialog.Builder(this)
-            .setTitle(R.string.permissions_intro_title)
-            .setMessage(R.string.permissions_intro_message)
-            .setCancelable(false)
-            .setPositiveButton(R.string.permissions_continue) { _, _ ->
-                continuePermissionOnboarding()
-            }
-            .setNegativeButton(R.string.permissions_skip) { _, _ ->
-                permissionOnboardingRunning = false
-                PrayerPreferences.setPermissionOnboardingCompleted(this, true)
-            }
-            .show()
+        continuePermissionOnboarding()
     }
 
     private fun continuePermissionOnboarding() {
@@ -2097,7 +2091,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
     private var suppressNotificationDialogAutoSave = false
     private var suppressAppearanceDialogAutoSave = false
     private val autoLocationFlowState = AutoLocationFlowState()
-    private var setupChecklistShown = false
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -2136,7 +2129,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val languages = supportedLanguages(requireContext())
         val azanSounds = supportedAzanSounds(requireContext())
         val suggestedLocation = PrayerPreferences.suggestedLocation(requireContext())
-        val isInitialSetup = !PrayerPreferences.hasCompletedInitialSetup(requireContext())
         val currentLanguage = AppCompatDelegate.getApplicationLocales().toLanguageTags()
             .ifBlank { Locale.getDefault().language }
             .split(",")
@@ -2153,11 +2145,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val versionName = runCatching {
             requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
         }.getOrNull() ?: "1.0"
-        setupBanner.visibility = if (isInitialSetup) View.VISIBLE else View.GONE
-        setupBanner.text = getString(R.string.settings_setup_incomplete)
-        setupBanner.setOnClickListener {
-            showSetupChecklistDialog()
-        }
+        setupBanner.visibility = View.GONE
         infoCard.setOnClickListener {
             showInfoDialog(versionName)
         }
@@ -2204,10 +2192,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         updateReminderSummaries()
         updateAppearanceSettingsSummary()
         finalizeSetupIfReady()
-        if (isInitialSetup && !setupChecklistShown) {
-            setupChecklistShown = true
-            view.post { showSetupChecklistDialog() }
-        }
         }.onFailure { throwable ->
             Log.e("TimerFragment", "Settings init failed", throwable)
             view.findViewById<TextView>(R.id.timer_label)?.text = getString(R.string.settings_safe_mode_message)
@@ -2875,16 +2859,11 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val root = view ?: return
         val context = requireContext()
         val setupBanner = root.findViewById<TextView>(R.id.setup_banner)
-        val ready = PrayerPreferences.isInitialSetupSatisfied(context)
-        PrayerPreferences.setInitialSetupComplete(context, ready)
-        if (ready) {
-            setupBanner.visibility = View.GONE
-            setupChecklistDialog?.dismiss()
-            setupChecklistDialog = null
-            (activity as? MainActivity)?.applySetupMode(false, navigateToPrayer = false)
-        } else {
-            setupBanner.visibility = View.VISIBLE
-        }
+        PrayerPreferences.setInitialSetupComplete(context, true)
+        setupBanner.visibility = View.GONE
+        setupChecklistDialog?.dismiss()
+        setupChecklistDialog = null
+        (activity as? MainActivity)?.applySetupMode(false, navigateToPrayer = false)
     }
 
     private fun missingSetupItems(context: Context): List<String> {
@@ -2893,8 +2872,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             items += getString(R.string.setup_missing_profile)
         }
         if (!PrayerPreferences.isNotificationSetupCompleted(context) ||
-            !PrayerPreferences.areRemindersGloballyEnabled(context) ||
-            reminderSwitchIds.indices.none { PrayerPreferences.isReminderEnabled(context, it) } ||
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
         ) {
