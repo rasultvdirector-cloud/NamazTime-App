@@ -83,12 +83,6 @@
             android:text="@string/settings_reminder_fajr_label" />
 
         <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_sunrise_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_sunrise_label" />
-
-        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switch_dhuhr_dialog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

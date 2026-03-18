@@ -24,6 +24,15 @@ internal object NotificationSettingsDialogSupport {
         val testPreReminderButton: Button,
     )
 
+    private fun buildPrayerEnabledStates(prayerSwitches: List<SwitchCompat>): List<Boolean> = listOf(
+        prayerSwitches.getOrNull(0)?.isChecked == true,
+        false,
+        prayerSwitches.getOrNull(1)?.isChecked == true,
+        prayerSwitches.getOrNull(2)?.isChecked == true,
+        prayerSwitches.getOrNull(3)?.isChecked == true,
+        prayerSwitches.getOrNull(4)?.isChecked == true,
+    )
+
     internal data class SpinnerOptions(
         val preReminderOptions: List<Pair<Int, String>>,
         val reminderTypeOptions: List<Pair<String, String>>,
@@ -44,7 +53,6 @@ internal object NotificationSettingsDialogSupport {
         showImsakIftarAllMonthsSwitch = view.findViewById(R.id.switch_show_imsak_iftar_all_months_dialog),
         prayerSwitches = listOf(
             view.findViewById(R.id.switch_fajr_dialog),
-            view.findViewById(R.id.switch_sunrise_dialog),
             view.findViewById(R.id.switch_dhuhr_dialog),
             view.findViewById(R.id.switch_asr_dialog),
             view.findViewById(R.id.switch_maghrib_dialog),
@@ -89,8 +97,9 @@ internal object NotificationSettingsDialogSupport {
         bindings.jumaaSwitch.isChecked = PrayerPreferences.areJumaaNotificationsEnabled(context)
         bindings.showImsakIftarAllMonthsSwitch.isChecked =
             PrayerPreferences.shouldShowImsakIftarOutsideRamadan(context)
+        val prayerIndexes = listOf(0, 2, 3, 4, 5)
         bindings.prayerSwitches.forEachIndexed { index, switch ->
-            switch.isChecked = PrayerPreferences.isReminderEnabled(context, index)
+            switch.isChecked = PrayerPreferences.isReminderEnabled(context, prayerIndexes[index])
         }
     }
 
@@ -120,7 +129,7 @@ internal object NotificationSettingsDialogSupport {
                 PrayerPreferences.getRepeatReminderMinutes(context),
             ),
             showImsakIftarAllMonths = bindings.showImsakIftarAllMonthsSwitch.isChecked,
-            enabledStates = bindings.prayerSwitches.map { it.isChecked },
+            enabledStates = buildPrayerEnabledStates(bindings.prayerSwitches),
         )
     }
 

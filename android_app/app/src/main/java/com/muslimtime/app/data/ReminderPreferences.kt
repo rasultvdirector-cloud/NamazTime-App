@@ -28,7 +28,7 @@ internal object ReminderPreferences {
 
     fun isReminderEnabled(context: Context, index: Int): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getBoolean(reminderEnabledKeys()[index], index == 0 || index == 4)
+        return prefs.getBoolean(reminderEnabledKeys()[index], index != 1)
     }
 
     fun setReminderEnabled(context: Context, index: Int, enabled: Boolean) {
