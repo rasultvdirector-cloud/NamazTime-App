@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, createReadStream, existsSync, readFileSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
 import { createServer } from "node:http";
 
@@ -7,6 +7,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 const rootDir = resolve(process.cwd(), "backend");
 const dataDir = join(rootDir, "data");
 const sampleAudioPath = resolve(process.cwd(), "android_app/app/src/main/res/raw/azan_short_1.mp3");
+const telemetryLogPath = join(dataDir, "telemetry_logs.ndjson");
 
 const jsonHeaders = {
   "Content-Type": "application/json; charset=utf-8",
@@ -68,6 +69,25 @@ function audioFileHandler(res) {
   createReadStream(sampleAudioPath).pipe(res);
 }
 
+function telemetryHandler(req, res) {
+  let raw = "";
+  req.on("data", (chunk) => {
+    raw += chunk.toString("utf8");
+    if (raw.length > 32_000) {
+      req.destroy();
+    }
+  });
+  req.on("end", () => {
+    try {
+      const parsed = JSON.parse(raw || "{}");
+      appendFileSync(telemetryLogPath, `${JSON.stringify(parsed)}\n`, "utf8");
+      sendJson(res, 200, { ok: true });
+    } catch {
+      sendError(res, 400, "BAD_JSON", "Invalid telemetry payload.");
+    }
+  });
+}
+
 const server = createServer((req, res) => {
   if (!req.url) {
     sendError(res, 400, "BAD_REQUEST", "Missing request URL.");
@@ -98,6 +118,11 @@ const server = createServer((req, res) => {
     return;
   }
 
+  if (req.method === "POST" && pathname === "/v1/telemetry/logs") {
+    telemetryHandler(req, res);
+    return;
+  }
+
   if (pathname.startsWith("/v1/")) {
     sendError(res, 404, "NOT_FOUND", "Endpoint not found.");
     return;
@@ -110,6 +135,7 @@ const server = createServer((req, res) => {
       "/v1/quran/audio/suras",
       "/v1/quran/audio/suras/1/ayahs",
       "/v1/quran/audio/files/ayah_stub.mp3",
+      "/v1/telemetry/logs",
     ],
   };
   sendJson(res, 200, body);

@@ -12,6 +12,17 @@ if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val telemetryBaseUrl = (
+    localProperties.getProperty("namaztime.telemetryBaseUrl")
+        ?: System.getenv("NAMAZTIME_TELEMETRY_BASE_URL")
+        ?: ""
+    ).replace("\"", "\\\"")
+
 android {
     namespace = "com.muslimtime.app"
     compileSdk = 35
@@ -22,6 +33,7 @@ android {
         targetSdk = 35
         versionCode = 8
         versionName = "1.0.6"
+        buildConfigField("String", "TELEMETRY_BASE_URL", "\"$telemetryBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -58,6 +70,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
         viewBinding = true
     }

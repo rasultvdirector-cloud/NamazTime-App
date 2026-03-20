@@ -3035,6 +3035,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             }
             val statusBlock = collectReminderStatusLines(context, masterEnabled, enabledStates)
                 .joinToString("\n\n")
+            val diagnosticsBlock = reminderDiagnosticsBlock(context)
             val historyBlock = reminderHistoryBlock(context)
             val notificationIntent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -3048,7 +3049,8 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                 }
             } else null
             val dialogView = layoutInflater.inflate(R.layout.dialog_reminder_status, null)
-            dialogView.findViewById<TextView>(R.id.status_dialog_content)?.text = statusBlock + "\n\n" + historyBlock
+            dialogView.findViewById<TextView>(R.id.status_dialog_content)?.text =
+                statusBlock + "\n\n" + diagnosticsBlock + "\n\n" + historyBlock
             dialogView.findViewById<Button>(R.id.status_open_notifications)?.setOnClickListener {
                 runCatching { startActivity(notificationIntent) }
             }

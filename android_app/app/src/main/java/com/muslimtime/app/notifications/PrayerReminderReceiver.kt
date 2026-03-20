@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
 import com.muslimtime.app.data.AzerbaijaniDuaRepository
 import com.muslimtime.app.data.PrayerCompletionStore
+import com.muslimtime.app.data.ReminderDiagnosticsStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.data.dailyDuaContent
 import com.muslimtime.app.ui.MainActivity
@@ -26,6 +27,11 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         val leadMinutes = intent.getIntExtra(EXTRA_LEAD_MINUTES, 0)
         val repeatCount = intent.getIntExtra(EXTRA_REPEAT_COUNT, 0)
         val notificationOnly = intent.getBooleanExtra(EXTRA_NOTIFICATION_ONLY, false)
+        ReminderDiagnosticsStore.record(
+            context,
+            "receiver_fired",
+            "kind=$kind prayer=$prayerName id=$prayerId repeat=$repeatCount notificationOnly=$notificationOnly",
+        )
 
         when (kind) {
             KIND_PRE -> showPreReminder(context, prayerName, prayerId, requestCode, leadMinutes)
@@ -58,6 +64,11 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         leadMinutes: Int,
     ) {
         val reminderMessage = buildPreReminderMessage(context, prayerName, prayerId, leadMinutes)
+        ReminderDiagnosticsStore.record(
+            context,
+            "pre_reminder_shown",
+            "prayer=$prayerName id=$prayerId lead=$leadMinutes",
+        )
         val manager = ensureChannel(
             context = context,
             channelId = PRE_REMINDER_CHANNEL_ID,
@@ -115,10 +126,35 @@ class PrayerReminderReceiver : BroadcastReceiver() {
             PrayerPreferences.getReminderType(context)
         }
         if (!notificationOnly && reminderType != PrayerPreferences.REMINDER_TYPE_NOTIFICATION) {
-            val serviceIntent = Intent(context, AzanPlaybackService::class.java).apply {
-                action = AzanPlaybackService.ACTION_START
+            ReminderDiagnosticsStore.record(
+                context,
+                "azan_start_attempt",
+                "prayer=$prayerName id=$prayerId type=$reminderType repeat=$isRepeat",
+            )
+            runCatching {
+                val serviceIntent = Intent(context, AzanPlaybackService::class.java).apply {
+                    action = AzanPlaybackService.ACTION_START
+                }
+                ContextCompat.startForegroundService(context, serviceIntent)
+            }.onSuccess {
+                ReminderDiagnosticsStore.record(
+                    context,
+                    "azan_start_requested",
+                    "prayer=$prayerName id=$prayerId type=$reminderType",
+                )
+            }.onFailure { throwable ->
+                ReminderDiagnosticsStore.record(
+                    context,
+                    "azan_start_failed",
+                    "${throwable.javaClass.simpleName}: ${throwable.message.orEmpty()}",
+                )
             }
-            ContextCompat.startForegroundService(context, serviceIntent)
+        } else {
+            ReminderDiagnosticsStore.record(
+                context,
+                "azan_skipped",
+                "prayer=$prayerName id=$prayerId type=$reminderType notificationOnly=$notificationOnly",
+            )
         }
 
         val manager = ensureChannel(
@@ -181,6 +217,17 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         val notificationsGranted = hasNotificationPermission(context)
         if (notificationsGranted) {
             manager.notify(prayerId, notification)
+            ReminderDiagnosticsStore.record(
+                context,
+                "notification_shown",
+                "prayer=$prayerName id=$prayerId type=$reminderType repeat=$isRepeat",
+            )
+        } else {
+            ReminderDiagnosticsStore.record(
+                context,
+                "notification_blocked",
+                "POST_NOTIFICATIONS missing for prayer=$prayerName id=$prayerId",
+            )
         }
     }
 

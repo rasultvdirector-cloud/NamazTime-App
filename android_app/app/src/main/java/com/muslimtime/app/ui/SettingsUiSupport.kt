@@ -12,6 +12,7 @@ import com.muslimtime.app.data.AppAzanSound
 import com.muslimtime.app.data.PrayerHistoryStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.data.PrayerTimesRepository
+import com.muslimtime.app.data.ReminderDiagnosticsStore
 import java.util.Calendar
 
 internal fun prayerSourceOptions(context: Context): List<Pair<String, String>> = listOf(
@@ -228,6 +229,8 @@ internal fun reminderHistoryBlock(context: Context): String {
             historyEntries.joinToString("\n\n") { PrayerHistoryStore.formatEntry(it) }
     }
 }
+
+internal fun reminderDiagnosticsBlock(context: Context): String = ReminderDiagnosticsStore.diagnosticsBlock(context)
 
 internal fun preReminderOptions(context: Context): List<Pair<Int, String>> = listOf(
     0 to context.getString(R.string.settings_reminder_before_off),

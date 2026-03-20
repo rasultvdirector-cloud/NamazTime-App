@@ -13,13 +13,17 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.muslimtime.app.R
 import com.muslimtime.app.data.PrayerPreferences
+import com.muslimtime.app.data.ReminderDiagnosticsStore
 
 class AzanPlaybackService : Service() {
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_STOP -> stopPlayback()
+            ACTION_STOP -> {
+                ReminderDiagnosticsStore.record(this, "azan_stop_requested", "service stop action")
+                stopPlayback()
+            }
             else -> startPlayback()
         }
         return START_NOT_STICKY
@@ -33,38 +37,54 @@ class AzanPlaybackService : Service() {
     }
 
     private fun startPlayback() {
-        val selectedRawName = PrayerPreferences.getSelectedAzanRawName(this)
-        val rawId = resources.getIdentifier(selectedRawName, "raw", packageName)
-        if (rawId == 0) {
-            stopSelf()
-            return
-        }
+        runCatching {
+            val selectedRawName = PrayerPreferences.getSelectedAzanRawName(this)
+            val rawId = resources.getIdentifier(selectedRawName, "raw", packageName)
+            if (rawId == 0) {
+                ReminderDiagnosticsStore.record(this, "azan_raw_missing", "rawName=$selectedRawName")
+                stopSelf()
+                return
+            }
 
-        createChannelIfNeeded()
-        startForeground(NOTIFICATION_ID, buildForegroundNotification())
+            createChannelIfNeeded()
+            startForeground(NOTIFICATION_ID, buildForegroundNotification())
+            ReminderDiagnosticsStore.record(this, "azan_service_foreground", "rawId=$rawId")
 
-        if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build(),
-                )
-                setDataSource(this@AzanPlaybackService, android.net.Uri.parse("android.resource://$packageName/$rawId"))
-                isLooping = false
-                prepare()
-                setOnCompletionListener {
-                    stopPlayback()
+            if (mediaPlayer == null) {
+                mediaPlayer = MediaPlayer().apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build(),
+                    )
+                    setDataSource(this@AzanPlaybackService, android.net.Uri.parse("android.resource://$packageName/$rawId"))
+                    isLooping = false
+                    prepare()
+                    setOnCompletionListener {
+                        ReminderDiagnosticsStore.record(this@AzanPlaybackService, "azan_completed", "playback completed")
+                        stopPlayback()
+                    }
                 }
             }
-        }
 
-        mediaPlayer?.let { player ->
-            if (!player.isPlaying) {
-                player.start()
+            mediaPlayer?.let { player ->
+                if (!player.isPlaying) {
+                    player.start()
+                    ReminderDiagnosticsStore.record(this, "azan_playback_started", "rawId=$rawId")
+                }
+            } ?: run {
+                ReminderDiagnosticsStore.record(this, "azan_player_missing", "MediaPlayer was null")
+                stopSelf()
             }
-        } ?: stopSelf()
+        }.onFailure { throwable ->
+            ReminderDiagnosticsStore.record(
+                this,
+                "azan_playback_failed",
+                "${throwable.javaClass.simpleName}: ${throwable.message.orEmpty()}",
+            )
+            stopPlayback()
+        }
     }
 
     private fun stopPlayback() {
@@ -73,6 +93,7 @@ class AzanPlaybackService : Service() {
             release()
         }
         mediaPlayer = null
+        ReminderDiagnosticsStore.record(this, "azan_stopped", "service stopping")
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
