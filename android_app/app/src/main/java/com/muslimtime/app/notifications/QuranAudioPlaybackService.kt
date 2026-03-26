@@ -30,6 +30,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.muslimtime.app.R
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.data.QuranAudioBackendRepository
+import com.muslimtime.app.data.QuranAudioOfflineRepository
 import com.muslimtime.app.data.quranSuras
 import com.muslimtime.app.ui.MainActivity
 import kotlin.concurrent.thread
@@ -214,13 +215,14 @@ class QuranAudioPlaybackService : Service() {
         thread {
             val result = QuranAudioBackendRepository.fetchAyahs(this, nextSura)
             result.onSuccess { ayahs ->
+                val playableAyahs = QuranAudioOfflineRepository.resolvePlaybackAyahs(this, nextSura, ayahs)
                 if (ayahs.isEmpty()) {
                     stopPlayback()
                     return@onSuccess
                 }
                 val suraTitle = quranSuras().firstOrNull { it.number == nextSura }?.let { "${it.number}. ${it.name}" }.orEmpty()
                 currentSuraNumber = nextSura
-                playlist = ayahs.map {
+                playlist = playableAyahs.map {
                     QuranTrack(
                         url = it.audioUrl,
                         ayahKey = it.ayahKey,

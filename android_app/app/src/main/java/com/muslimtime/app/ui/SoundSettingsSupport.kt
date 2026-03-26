@@ -3,9 +3,27 @@ package com.muslimtime.app.ui
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import com.muslimtime.app.R
 import com.muslimtime.app.data.AppAzanSound
 import com.muslimtime.app.data.PrayerPreferences
+import com.muslimtime.app.data.supportedAzanSounds
 import com.muslimtime.app.notifications.AzanPlaybackService
+
+internal fun azanSoundOptions(context: Context): List<AppAzanSound> {
+    val options = supportedAzanSounds(context).toMutableList()
+    val customLabel = PrayerPreferences.getCustomAzanLabel(context)
+    val customUri = PrayerPreferences.getCustomAzanUri(context)
+    if (!customLabel.isNullOrBlank() && !customUri.isNullOrBlank()) {
+        options.add(
+            0,
+            AppAzanSound(
+                PrayerPreferences.CUSTOM_AZAN_RAW_NAME,
+                context.getString(R.string.azan_sound_option_custom_template, customLabel),
+            ),
+        )
+    }
+    return options
+}
 
 internal fun selectedAzanIndex(
     selectedRawName: String,

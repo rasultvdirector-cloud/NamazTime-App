@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/feedback_dialog_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/feedback_dialog_hint"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/feedback_contact_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="@string/feedback_contact_hint"
+        android:inputType="textEmailAddress|textCapSentences"
+        android:maxLines="1" />
+
+    <EditText
+        android:id="@+id/feedback_message_input"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:layout_marginTop="10dp"
+        android:gravity="top|start"
+        android:hint="@string/feedback_message_hint"
+        android:inputType="textCapSentences|textMultiLine"
+        android:minLines="6" />
+
+</LinearLayout>

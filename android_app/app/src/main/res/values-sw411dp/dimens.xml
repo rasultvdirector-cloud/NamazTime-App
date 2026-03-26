@@ -29,12 +29,17 @@
     <dimen name="prayer_summary_time_text">55sp</dimen>
 
     <dimen name="quran_entry_card_height">132dp</dimen>
+    <dimen name="quran_entry_compact_card_height">104dp</dimen>
     <dimen name="quran_entry_card_padding">20dp</dimen>
     <dimen name="quran_entry_icon_size">74dp</dimen>
+    <dimen name="quran_entry_compact_icon_size">48dp</dimen>
     <dimen name="quran_entry_arabic_icon_size">74dp</dimen>
     <dimen name="quran_entry_title_text">22sp</dimen>
+    <dimen name="quran_entry_compact_title_text">17sp</dimen>
     <dimen name="quran_entry_subtitle_text">14sp</dimen>
+    <dimen name="quran_entry_compact_subtitle_text">12sp</dimen>
     <dimen name="quran_entry_arabic_text">28sp</dimen>
+    <dimen name="quran_entry_compact_arabic_text">20sp</dimen>
     <dimen name="quran_content_title_text">20sp</dimen>
 
     <dimen name="quran_list_item_padding">14dp</dimen>

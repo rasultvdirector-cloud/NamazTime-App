@@ -2,7 +2,7 @@
     <string name="app_name">NamazTime</string>
     <string name="nav_prayer">Намаз</string>
     <string name="nav_quran">Коран</string>
-    <string name="nav_dua">Дуа</string>
+    <string name="nav_dua">Кибла</string>
     <string name="nav_qibla">Кибла</string>
     <string name="nav_reminder">Напоминание</string>
     <string name="nav_timer">Ещё</string>
@@ -51,7 +51,7 @@
     <string name="quran_allah_names_card_subtitle">الرَّحْمَٰنُ الرَّحِيمُ</string>
     <string name="quran_read_hint">Читайте аяты в формате книжной страницы.</string>
     <string name="quran_audio_hint">Каждый аят показан как отдельный аудио-пункт.</string>
-    <string name="dua_center_title">Центр дуа</string>
+    <string name="dua_center_title">Кибла</string>
     <string name="qibla_title">Кибла</string>
     <string name="qibla_screen_title">Кибла</string>
     <string name="qibla_screen_hint">Держите телефон ровно и поверните стрелку в сторону киблы.</string>

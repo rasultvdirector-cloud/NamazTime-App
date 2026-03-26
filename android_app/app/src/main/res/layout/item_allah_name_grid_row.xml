@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/left_card_root"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/bg_widget_action"
+        android:orientation="vertical"
+        android:padding="@dimen/allah_item_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/left_allah_number"
+                android:layout_width="@dimen/allah_item_badge_size"
+                android:layout_height="@dimen/allah_item_badge_size"
+                android:background="@drawable/bg_widget_status_active"
+                android:gravity="center"
+                android:textColor="@color/accent_primary"
+                android:textSize="@dimen/allah_item_meta_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/left_allah_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="2"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/allah_item_title_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/left_allah_transliteration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/allah_item_meta_text" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/left_allah_arabic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:textColor="@color/text_primary"
+            android:textDirection="rtl"
+            android:textSize="@dimen/allah_item_arabic_text"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="10dp"
+        android:layout_height="1dp" />
+
+    <LinearLayout
+        android:id="@+id/right_card_root"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/bg_widget_action"
+        android:orientation="vertical"
+        android:padding="@dimen/allah_item_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/right_allah_number"
+                android:layout_width="@dimen/allah_item_badge_size"
+                android:layout_height="@dimen/allah_item_badge_size"
+                android:background="@drawable/bg_widget_status_active"
+                android:gravity="center"
+                android:textColor="@color/accent_primary"
+                android:textSize="@dimen/allah_item_meta_text"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/right_allah_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="2"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/allah_item_title_text"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/right_allah_transliteration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/allah_item_meta_text" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/right_allah_arabic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:textColor="@color/text_primary"
+            android:textDirection="rtl"
+            android:textSize="@dimen/allah_item_arabic_text"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

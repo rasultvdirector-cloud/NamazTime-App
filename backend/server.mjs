@@ -8,6 +8,7 @@ const rootDir = resolve(process.cwd(), "backend");
 const dataDir = join(rootDir, "data");
 const sampleAudioPath = resolve(process.cwd(), "android_app/app/src/main/res/raw/azan_short_1.mp3");
 const telemetryLogPath = join(dataDir, "telemetry_logs.ndjson");
+const feedbackLogPath = join(dataDir, "feedback.ndjson");
 
 const jsonHeaders = {
   "Content-Type": "application/json; charset=utf-8",
@@ -81,9 +82,34 @@ function telemetryHandler(req, res) {
     try {
       const parsed = JSON.parse(raw || "{}");
       appendFileSync(telemetryLogPath, `${JSON.stringify(parsed)}\n`, "utf8");
+      console.log(
+        `[telemetry] ${parsed.timestamp || "-"} event=${parsed.event || "-"} version=${parsed.versionName || "-"} device=${parsed.device || "-"}`
+      );
       sendJson(res, 200, { ok: true });
     } catch {
       sendError(res, 400, "BAD_JSON", "Invalid telemetry payload.");
+    }
+  });
+}
+
+function feedbackHandler(req, res) {
+  let raw = "";
+  req.on("data", (chunk) => {
+    raw += chunk.toString("utf8");
+    if (raw.length > 32_000) {
+      req.destroy();
+    }
+  });
+  req.on("end", () => {
+    try {
+      const parsed = JSON.parse(raw || "{}");
+      appendFileSync(feedbackLogPath, `${JSON.stringify(parsed)}\n`, "utf8");
+      console.log(
+        `[feedback] ${parsed.timestamp || "-"} version=${parsed.versionName || "-"} device=${parsed.device || "-"} contact=${parsed.contact || "-"}`
+      );
+      sendJson(res, 200, { ok: true });
+    } catch {
+      sendError(res, 400, "BAD_JSON", "Invalid feedback payload.");
     }
   });
 }
@@ -123,6 +149,11 @@ const server = createServer((req, res) => {
     return;
   }
 
+  if (req.method === "POST" && pathname === "/v1/feedback") {
+    feedbackHandler(req, res);
+    return;
+  }
+
   if (pathname.startsWith("/v1/")) {
     sendError(res, 404, "NOT_FOUND", "Endpoint not found.");
     return;
@@ -136,6 +167,7 @@ const server = createServer((req, res) => {
       "/v1/quran/audio/suras/1/ayahs",
       "/v1/quran/audio/files/ayah_stub.mp3",
       "/v1/telemetry/logs",
+      "/v1/feedback",
     ],
   };
   sendJson(res, 200, body);

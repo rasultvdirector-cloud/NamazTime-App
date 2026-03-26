@@ -38,6 +38,8 @@ object PrayerPreferences {
     private const val KEY_REMINDER_MAGHRIB = "reminder_maghrib"
     private const val KEY_REMINDER_ISHA = "reminder_isha"
     private const val KEY_AZAN_SOUND = "azan_sound"
+    private const val KEY_AZAN_CUSTOM_URI = "azan_custom_uri"
+    private const val KEY_AZAN_CUSTOM_LABEL = "azan_custom_label"
     private const val KEY_PRAYER_SOURCE = "prayer_source"
     private const val KEY_LOCATION_MODE = "location_mode"
     private const val KEY_LAST_SYNC_DATE = "last_sync_date"
@@ -66,7 +68,9 @@ object PrayerPreferences {
     const val PRAYER_SOURCE_UMMAH = "ummah"
     const val REMINDER_TYPE_NOTIFICATION = "notification"
     const val REMINDER_TYPE_NOTIFICATION_AZAN = "notification_azan"
+    const val REMINDER_TYPE_AZAN_ONLY = "azan_only"
     const val REMINDER_TYPE_FULLSCREEN_SIMPLE = "fullscreen_simple"
+    const val CUSTOM_AZAN_RAW_NAME = "custom_uri"
     const val USER_GENDER_UNSPECIFIED = "unspecified"
     const val USER_GENDER_FEMALE = "female"
     const val USER_GENDER_MALE = "male"
@@ -224,6 +228,36 @@ object PrayerPreferences {
     fun setSelectedAzanRawName(context: Context, rawName: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_AZAN_SOUND, rawName).apply()
+    }
+
+    fun getCustomAzanUri(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_AZAN_CUSTOM_URI, null)
+    }
+
+    fun getCustomAzanLabel(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_AZAN_CUSTOM_LABEL, null)
+    }
+
+    fun setCustomAzan(context: Context, uri: String, label: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString(KEY_AZAN_CUSTOM_URI, uri)
+            .putString(KEY_AZAN_CUSTOM_LABEL, label)
+            .putString(KEY_AZAN_SOUND, CUSTOM_AZAN_RAW_NAME)
+            .apply()
+    }
+
+    fun clearCustomAzan(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .remove(KEY_AZAN_CUSTOM_URI)
+            .remove(KEY_AZAN_CUSTOM_LABEL)
+            .apply()
+        if (getSelectedAzanRawName(context) == CUSTOM_AZAN_RAW_NAME) {
+            setSelectedAzanRawName(context, "azan_short_1")
+        }
     }
 
     fun getSelectedPrayerSource(context: Context): String = PrayerSourcePreferences.getSelectedPrayerSource(context)

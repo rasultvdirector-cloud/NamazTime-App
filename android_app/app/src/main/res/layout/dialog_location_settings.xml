@@ -81,5 +81,27 @@
             android:textColor="@color/text_secondary"
             android:textSize="13sp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/settings_prayer_source_label"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/location_prayer_source_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/location_prayer_source_help_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/settings_prayer_source_help_auto"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
     </LinearLayout>
 </ScrollView>

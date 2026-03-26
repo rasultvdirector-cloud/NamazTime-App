@@ -2,7 +2,7 @@
     <string name="app_name">NamazTime</string>
     <string name="nav_prayer">Namaz</string>
     <string name="nav_quran">Kuran</string>
-    <string name="nav_dua">Dua</string>
+    <string name="nav_dua">Kıble</string>
     <string name="nav_qibla">Kıble</string>
     <string name="nav_reminder">Hatırlatma</string>
     <string name="nav_timer">Diğer</string>
@@ -51,7 +51,7 @@
     <string name="quran_allah_names_card_subtitle">الرَّحْمَٰنُ الرَّحِيمُ</string>
     <string name="quran_read_hint">Ayetleri kitap sayfası gibi okuyabilirsiniz.</string>
     <string name="quran_audio_hint">Her ayet ayrı bir ses maddesi olarak gösterilir.</string>
-    <string name="dua_center_title">Dua merkezi</string>
+    <string name="dua_center_title">Kıble</string>
     <string name="qibla_title">Kıble</string>
     <string name="qibla_screen_title">Kıble</string>
     <string name="qibla_screen_hint">Telefonu düz tutun ve oku kıble yönüne çevirin.</string>

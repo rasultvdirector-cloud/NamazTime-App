@@ -100,6 +100,7 @@ internal object ReminderPreferences {
             ?.takeIf {
                 it == PrayerPreferences.REMINDER_TYPE_NOTIFICATION ||
                     it == PrayerPreferences.REMINDER_TYPE_NOTIFICATION_AZAN ||
+                    it == PrayerPreferences.REMINDER_TYPE_AZAN_ONLY ||
                     it == PrayerPreferences.REMINDER_TYPE_FULLSCREEN_SIMPLE
             }
             ?: PrayerPreferences.REMINDER_TYPE_NOTIFICATION_AZAN
@@ -108,6 +109,7 @@ internal object ReminderPreferences {
         val safeType = if (
             type == PrayerPreferences.REMINDER_TYPE_NOTIFICATION ||
             type == PrayerPreferences.REMINDER_TYPE_NOTIFICATION_AZAN ||
+            type == PrayerPreferences.REMINDER_TYPE_AZAN_ONLY ||
             type == PrayerPreferences.REMINDER_TYPE_FULLSCREEN_SIMPLE
         ) {
             type

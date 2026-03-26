@@ -79,13 +79,16 @@ internal fun soundSettingsSummaryText(
     azanSounds: List<AppAzanSound>,
 ): String {
     val selectedLabel = azanSounds.firstOrNull { it.rawName == selectedRawName }?.label
+        ?: if (selectedRawName == PrayerPreferences.CUSTOM_AZAN_RAW_NAME) {
+            PrayerPreferences.getCustomAzanLabel(context)?.let {
+                context.getString(R.string.azan_sound_option_custom_template, it)
+            }
+        } else {
+            null
+        }
         ?: azanSounds.firstOrNull()?.label
         ?: ""
-    return buildString {
-        append(context.getString(R.string.settings_sound_selected, selectedLabel))
-        append("\n")
-        append(context.getString(R.string.azan_sound_note))
-    }
+    return context.getString(R.string.settings_sound_selected, selectedLabel)
 }
 
 internal fun profileSettingsSummaryText(context: Context): String {
@@ -142,11 +145,16 @@ internal fun reminderSummaryText(
         enabledNames.isEmpty() -> context.getString(R.string.reminder_selection_empty)
         else -> {
             val before = PrayerPreferences.getPreReminderMinutes(context)
-            val repeat = PrayerPreferences.getRepeatReminderMinutes(context)
+            val typeLabel = when (PrayerPreferences.getReminderType(context)) {
+                PrayerPreferences.REMINDER_TYPE_NOTIFICATION -> context.getString(R.string.settings_reminder_type_notification)
+                PrayerPreferences.REMINDER_TYPE_AZAN_ONLY -> context.getString(R.string.settings_reminder_type_azan_only)
+                else -> context.getString(R.string.settings_reminder_type_notification_azan)
+            }
             buildString {
+                append(typeLabel)
+                append("\n")
                 append(enabledNames.joinToString(", "))
                 if (before > 0) append(" • $before dəq əvvəl")
-                if (repeat > 0) append(" • $repeat dəq təkrar")
             }
         }
     }
@@ -231,6 +239,7 @@ internal fun reminderHistoryBlock(context: Context): String {
 }
 
 internal fun reminderDiagnosticsBlock(context: Context): String = ReminderDiagnosticsStore.diagnosticsBlock(context)
+internal fun reminderTelemetryBlock(context: Context): String = ReminderDiagnosticsStore.telemetryStatusBlock(context)
 
 internal fun preReminderOptions(context: Context): List<Pair<Int, String>> = listOf(
     0 to context.getString(R.string.settings_reminder_before_off),
@@ -242,7 +251,7 @@ internal fun preReminderOptions(context: Context): List<Pair<Int, String>> = lis
 internal fun reminderTypeOptions(context: Context): List<Pair<String, String>> = listOf(
     PrayerPreferences.REMINDER_TYPE_NOTIFICATION to context.getString(R.string.settings_reminder_type_notification),
     PrayerPreferences.REMINDER_TYPE_NOTIFICATION_AZAN to context.getString(R.string.settings_reminder_type_notification_azan),
-    PrayerPreferences.REMINDER_TYPE_FULLSCREEN_SIMPLE to context.getString(R.string.settings_reminder_type_fullscreen),
+    PrayerPreferences.REMINDER_TYPE_AZAN_ONLY to context.getString(R.string.settings_reminder_type_azan_only),
 )
 
 internal fun repeatReminderOptions(context: Context): List<Pair<Int, String>> = listOf(

@@ -24,19 +24,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="@string/settings_user_gender_label"
-        android:textStyle="bold" />
-
-    <Spinner
-        android:id="@+id/settings_user_gender_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
         android:text="@string/settings_birth_date_label"
         android:textStyle="bold" />
 
@@ -69,6 +56,60 @@
             android:layout_weight="1.4"
             android:spinnerMode="dropdown" />
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/settings_user_gender_label"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/settings_user_gender_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/settings_appearance_section"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/settings_user_font_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <Spinner
+        android:id="@+id/settings_user_theme_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/settings_user_elder_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/settings_elder_mode_label" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/language_label"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/settings_user_language_button"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:minWidth="88dp"
+        android:text="AZ" />
 
     <TextView
         android:id="@+id/settings_user_name_help"

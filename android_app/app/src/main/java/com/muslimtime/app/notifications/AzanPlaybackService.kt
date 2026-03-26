@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -39,8 +40,17 @@ class AzanPlaybackService : Service() {
     private fun startPlayback() {
         runCatching {
             val selectedRawName = PrayerPreferences.getSelectedAzanRawName(this)
-            val rawId = resources.getIdentifier(selectedRawName, "raw", packageName)
-            if (rawId == 0) {
+            val playbackUri = if (selectedRawName == PrayerPreferences.CUSTOM_AZAN_RAW_NAME) {
+                PrayerPreferences.getCustomAzanUri(this)?.let(Uri::parse)
+            } else {
+                val rawId = resources.getIdentifier(selectedRawName, "raw", packageName)
+                if (rawId == 0) {
+                    null
+                } else {
+                    Uri.parse("android.resource://$packageName/$rawId")
+                }
+            }
+            if (playbackUri == null) {
                 ReminderDiagnosticsStore.record(this, "azan_raw_missing", "rawName=$selectedRawName")
                 stopSelf()
                 return
@@ -48,7 +58,7 @@ class AzanPlaybackService : Service() {
 
             createChannelIfNeeded()
             startForeground(NOTIFICATION_ID, buildForegroundNotification())
-            ReminderDiagnosticsStore.record(this, "azan_service_foreground", "rawId=$rawId")
+            ReminderDiagnosticsStore.record(this, "azan_service_foreground", "source=$selectedRawName")
 
             if (mediaPlayer == null) {
                 mediaPlayer = MediaPlayer().apply {
@@ -58,7 +68,7 @@ class AzanPlaybackService : Service() {
                             .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                             .build(),
                     )
-                    setDataSource(this@AzanPlaybackService, android.net.Uri.parse("android.resource://$packageName/$rawId"))
+                    setDataSource(this@AzanPlaybackService, playbackUri)
                     isLooping = false
                     prepare()
                     setOnCompletionListener {
@@ -71,7 +81,7 @@ class AzanPlaybackService : Service() {
             mediaPlayer?.let { player ->
                 if (!player.isPlaying) {
                     player.start()
-                    ReminderDiagnosticsStore.record(this, "azan_playback_started", "rawId=$rawId")
+                    ReminderDiagnosticsStore.record(this, "azan_playback_started", "source=$selectedRawName")
                 }
             } ?: run {
                 ReminderDiagnosticsStore.record(this, "azan_player_missing", "MediaPlayer was null")

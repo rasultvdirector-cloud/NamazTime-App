@@ -11,7 +11,14 @@ import com.muslimtime.app.data.AppLocation
 import com.muslimtime.app.data.ManualCityOption
 import com.muslimtime.app.data.ManualCountryOption
 
-internal fun locationSummaryText(city: String, country: String): String = "$city, $country"
+internal fun locationSummaryText(context: Context, city: String, country: String, source: String): String =
+    context.getString(
+        R.string.settings_location_summary_template,
+        city,
+        country,
+        prayerSourceOptions(context).firstOrNull { it.first == source }?.second
+            ?: context.getString(R.string.settings_prayer_source_auto),
+    )
 
 internal fun applyLocationModeBadge(
     context: Context,

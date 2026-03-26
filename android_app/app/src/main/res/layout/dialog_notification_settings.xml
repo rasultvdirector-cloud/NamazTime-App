@@ -9,36 +9,9 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_reminders_enabled_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_reminders_master_label" />
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_jumaa_notifications_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/settings_jumaa_notifications_label" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/settings_reminder_before_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/spinner_pre_reminder_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
             android:text="@string/settings_reminder_type_label"
             android:textStyle="bold" />
 
@@ -49,30 +22,11 @@
             android:layout_marginTop="6dp" />
 
         <TextView
+            android:id="@+id/notification_prayer_section_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="@string/settings_reminder_repeat_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/spinner_repeat_reminder_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" />
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_show_imsak_iftar_all_months_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/settings_show_imsak_iftar_all_months_label" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/settings_reminder_prayers_label"
+            android:text="@string/settings_reminder_prayers_label_azan"
             android:textStyle="bold" />
 
         <androidx.appcompat.widget.SwitchCompat
@@ -105,6 +59,33 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_reminder_isha_label" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_reminder_before_label"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_pre_reminder_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_jumaa_notifications_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_jumaa_notifications_label" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_show_imsak_iftar_all_months_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/settings_show_imsak_iftar_all_months_label" />
 
         <Button
             android:id="@+id/test_reminder_button_dialog"

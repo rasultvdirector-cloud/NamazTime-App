@@ -13,6 +13,7 @@
         android:src="@drawable/ic_quran_ornament" />
 
     <LinearLayout
+        android:id="@+id/sura_card_root"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_quran_sura_card"
@@ -54,17 +55,37 @@
                 android:textSize="@dimen/quran_list_meta_text" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/sura_action_button"
-            android:layout_width="@dimen/quran_list_action_width"
-            android:layout_height="@dimen/quran_list_action_height"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:background="@drawable/bg_audio_control"
-            android:text="@string/quran_audio_play_button"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="@dimen/quran_list_action_text"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sura_action_button"
+                android:layout_width="@dimen/quran_list_action_width"
+                android:layout_height="@dimen/quran_list_action_height"
+                android:background="@drawable/bg_audio_control"
+                android:text="@string/quran_audio_play_button"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/quran_list_action_text"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/sura_download_button"
+                android:layout_width="@dimen/quran_list_action_width"
+                android:layout_height="@dimen/quran_list_action_height"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_widget_action"
+                android:text="@string/quran_audio_download_button"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/quran_list_action_text"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

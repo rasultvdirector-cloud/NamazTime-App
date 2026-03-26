@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/quran_scroll_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     tools:context=".ui.QuranFragment">
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/quran_scroll_root"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/screen_page_padding">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_page_padding">
 
         <TextView
             android:layout_width="wrap_content"
@@ -32,67 +36,10 @@
             android:textSize="@dimen/quran_entry_subtitle_text" />
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_read_quran"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/quran_entry_card_height"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/imsak_card_stroke"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_quran_entry_read"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/quran_entry_card_padding">
-
-                <ImageView
-                    android:layout_width="@dimen/quran_entry_icon_size"
-                    android:layout_height="@dimen/quran_entry_icon_size"
-                    android:alpha="0.96"
-                    android:src="@drawable/ic_quran_book"
-                    app:tint="@color/white" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="18dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/card_read_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/quran_read_card_title"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/quran_entry_title_text"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/card_read_subtitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/quran_read_card_subtitle"
-                        android:textColor="#F7EED6"
-                        android:textSize="@dimen/quran_entry_subtitle_text" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_audio_quran"
             android:layout_width="match_parent"
             android:layout_height="@dimen/quran_entry_card_height"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="16dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
@@ -145,64 +92,135 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_allah_names"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/quran_entry_card_height"
+            android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            app:strokeColor="@color/imsak_card_stroke"
-            app:strokeWidth="1dp">
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_quran_entry_names"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/quran_entry_card_padding">
-
-                <TextView
-                    android:layout_width="@dimen/quran_entry_icon_size"
-                    android:layout_height="@dimen/quran_entry_icon_size"
-                    android:gravity="center"
-                    android:text="الله"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/quran_entry_arabic_text"
-                    android:textStyle="bold" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_read_quran"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quran_entry_compact_card_height"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/imsak_card_stroke"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="18dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_quran_entry_read"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/quran_entry_card_padding">
+
+                    <ImageView
+                        android:layout_width="@dimen/quran_entry_compact_icon_size"
+                        android:layout_height="@dimen/quran_entry_compact_icon_size"
+                        android:alpha="0.96"
+                        android:src="@drawable/ic_quran_book"
+                        app:tint="@color/white" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/card_read_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/quran_read_card_title"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/quran_entry_compact_title_text"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/card_read_subtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/quran_read_card_subtitle"
+                            android:textColor="#F7EED6"
+                            android:textSize="@dimen/quran_entry_compact_subtitle_text"
+                            android:maxLines="2" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_allah_names"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quran_entry_compact_card_height"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/imsak_card_stroke"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_quran_entry_names"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/quran_entry_card_padding">
 
                     <TextView
-                        android:id="@+id/card_names_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/quran_allah_names_tab"
+                        android:layout_width="@dimen/quran_entry_compact_icon_size"
+                        android:layout_height="@dimen/quran_entry_compact_icon_size"
+                        android:gravity="center"
+                        android:text="الله"
                         android:textColor="@color/white"
-                        android:textSize="@dimen/quran_entry_title_text"
+                        android:textSize="@dimen/quran_entry_compact_arabic_text"
                         android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/card_names_subtitle"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/quran_allah_names_card_subtitle"
-                        android:textColor="#F9F0DA"
-                        android:textSize="@dimen/screen_subtitle_text" />
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/card_names_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/quran_allah_names_tab"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/quran_entry_compact_title_text"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/card_names_subtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/quran_allah_names_card_subtitle"
+                            android:textColor="#F9F0DA"
+                            android:textSize="@dimen/quran_entry_compact_subtitle_text"
+                            android:maxLines="2" />
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/quran_content_card"
@@ -235,6 +253,45 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/quran_read_hint"
                     android:textColor="@color/text_secondary" />
+
+                <LinearLayout
+                    android:id="@+id/quran_download_progress_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_quran_audio_badge"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/quran_download_progress_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/quran_audio_download_in_progress"
+                        android:textColor="@color/accent_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <ProgressBar
+                        android:id="@+id/quran_download_progress_bar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="10dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_quran_audio_progress" />
+
+                    <TextView
+                        android:id="@+id/quran_download_progress_label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/quran_back_to_suras"
@@ -306,145 +363,148 @@
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_quran_audio_panel"
                             android:orientation="vertical"
-                            android:padding="@dimen/screen_page_padding">
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content">
-
-                                <ImageView
-                                    android:layout_width="44dp"
-                                    android:layout_height="44dp"
-                                    android:layout_gravity="top|end"
-                                    android:alpha="0.65"
-                                    android:src="@drawable/ic_quran_ornament" />
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <LinearLayout
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:background="@drawable/bg_quran_audio_badge"
-                                        android:gravity="center_vertical"
-                                        android:orientation="horizontal"
-                                        android:paddingStart="10dp"
-                                        android:paddingTop="6dp"
-                                        android:paddingEnd="10dp"
-                                        android:paddingBottom="6dp">
-
-                                        <ImageView
-                                            android:layout_width="16dp"
-                                            android:layout_height="16dp"
-                                            android:src="@drawable/ic_audio_wave"
-                                            app:tint="@color/accent_primary" />
-
-                                        <TextView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:layout_marginStart="6dp"
-                                            android:text="@string/quran_audio_tab"
-                                            android:textColor="@color/accent_primary"
-                                            android:textSize="12sp"
-                                            android:textStyle="bold" />
-                                    </LinearLayout>
-                                </LinearLayout>
-                            </FrameLayout>
-
-                            <TextView
-                                android:id="@+id/quran_audio_now_playing_title"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="12dp"
-                                android:ellipsize="end"
-                                android:maxLines="2"
-                                android:text="@string/quran_audio_now_playing_idle"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/quran_audio_now_playing_subtitle"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
-                                android:ellipsize="end"
-                                android:maxLines="2"
-                                android:text="@string/quran_audio_play_hint"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="13sp" />
-
-                            <View
-                                android:layout_width="92dp"
-                                android:layout_height="1dp"
-                                android:layout_marginTop="12dp"
-                                android:background="@color/imsak_card_stroke" />
-
-                            <ProgressBar
-                                android:id="@+id/quran_audio_progress"
-                                style="?android:attr/progressBarStyleHorizontal"
-                                android:layout_width="match_parent"
-                                android:layout_height="8dp"
-                                android:layout_marginTop="14dp"
-                                android:max="100"
-                                android:progress="0"
-                                android:progressDrawable="@drawable/bg_quran_audio_progress" />
-
-                            <TextView
-                                android:id="@+id/quran_audio_progress_label"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:gravity="end"
-                                android:text="@string/quran_audio_progress_idle"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
+                            android:paddingStart="12dp"
+                            android:paddingTop="10dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="10dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="14dp"
-                                android:gravity="center"
+                                android:baselineAligned="false"
+                                android:gravity="top"
                                 android:orientation="horizontal">
 
-                                <ImageButton
-                                    android:id="@+id/quran_audio_play"
-                                    android:layout_width="64dp"
-                                    android:layout_height="44dp"
-                                    android:layout_marginEnd="10dp"
-                                    android:background="@drawable/bg_audio_control"
-                                    android:contentDescription="@string/quran_audio_play_button"
-                                    android:padding="8dp"
-                                    android:src="@drawable/ic_audio_play"
-                                    app:tint="@color/text_primary" />
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
 
-                                <ImageButton
-                                    android:id="@+id/quran_audio_pause"
-                                    android:layout_width="64dp"
-                                    android:layout_height="44dp"
-                                    android:layout_marginEnd="10dp"
-                                    android:background="@drawable/bg_audio_control"
-                                    android:contentDescription="@string/quran_audio_pause_button"
-                                    android:padding="8dp"
-                                    android:src="@drawable/ic_audio_pause"
-                                    app:tint="@color/text_primary" />
+                                    <TextView
+                                        android:id="@+id/quran_audio_now_playing_title"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:ellipsize="end"
+                                        android:maxLines="1"
+                                        android:text="@string/quran_audio_now_playing_idle"
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold" />
 
-                                <ImageButton
-                                    android:id="@+id/quran_audio_stop"
-                                    android:layout_width="64dp"
-                                    android:layout_height="44dp"
-                                    android:background="@drawable/bg_audio_control_stop"
-                                    android:contentDescription="@string/quran_audio_stop_button"
-                                    android:padding="8dp"
-                                    android:src="@drawable/ic_audio_stop"
-                                    app:tint="@color/white" />
+                                    <TextView
+                                        android:id="@+id/quran_audio_now_playing_subtitle"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="3dp"
+                                        android:ellipsize="end"
+                                        android:maxLines="1"
+                                        android:text="@string/quran_audio_play_hint"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp" />
+
+                                    <ProgressBar
+                                        android:id="@+id/quran_audio_progress"
+                                        style="?android:attr/progressBarStyleHorizontal"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="6dp"
+                                        android:layout_marginTop="8dp"
+                                        android:layout_marginEnd="10dp"
+                                        android:max="100"
+                                        android:progress="0"
+                                        android:progressDrawable="@drawable/bg_quran_audio_progress" />
+
+                                    <TextView
+                                        android:id="@+id/quran_audio_progress_label"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:gravity="start"
+                                        android:text="@string/quran_audio_progress_idle"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="10sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <ImageButton
+                                        android:id="@+id/quran_audio_play"
+                                        android:layout_width="42dp"
+                                        android:layout_height="32dp"
+                                        android:background="@drawable/bg_audio_control"
+                                        android:contentDescription="@string/quran_audio_play_button"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_audio_play"
+                                        app:tint="@color/text_primary" />
+
+                                    <ImageButton
+                                        android:id="@+id/quran_audio_pause"
+                                        android:layout_width="42dp"
+                                        android:layout_height="32dp"
+                                        android:layout_marginTop="6dp"
+                                        android:background="@drawable/bg_audio_control"
+                                        android:contentDescription="@string/quran_audio_pause_button"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_audio_pause"
+                                        app:tint="@color/text_primary" />
+
+                                    <ImageButton
+                                        android:id="@+id/quran_audio_stop"
+                                        android:layout_width="42dp"
+                                        android:layout_height="32dp"
+                                        android:layout_marginTop="6dp"
+                                        android:background="@drawable/bg_audio_control_stop"
+                                        android:contentDescription="@string/quran_audio_stop_button"
+                                        android:padding="5dp"
+                                        android:src="@drawable/ic_audio_stop"
+                                        app:tint="@color/white" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/quran_audio_offline_controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/quran_audio_filter_all"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_quran_filter_active"
+                        android:backgroundTint="@null"
+                        android:text="@string/quran_audio_filter_all"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Button
+                        android:id="@+id/quran_audio_filter_downloaded"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_quran_filter_inactive"
+                        android:backgroundTint="@null"
+                        android:text="@string/quran_audio_filter_downloaded"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -495,5 +555,21 @@
                 android:text="@string/quran_next_sura"
                 android:textAllCaps="false" />
         </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/quran_scroll_to_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="@string/quran_scroll_to_top"
+        android:src="@android:drawable/arrow_up_float"
+        android:visibility="gone"
+        app:backgroundTint="@color/accent_primary"
+        app:fabCustomSize="52dp"
+        app:maxImageSize="24dp"
+        app:tint="@color/white" />
+</FrameLayout>

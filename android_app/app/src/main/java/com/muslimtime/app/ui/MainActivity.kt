@@ -18,6 +18,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.graphics.drawable.GradientDrawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -26,6 +28,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.provider.OpenableColumns
 import android.util.TypedValue
 import android.util.Log
 import android.view.LayoutInflater
@@ -64,6 +67,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.snackbar.Snackbar
+import com.muslimtime.app.BuildConfig
 import com.muslimtime.app.R
 import com.muslimtime.app.data.AudioAyahItem
 import com.muslimtime.app.data.AudioSuraItem
@@ -77,19 +81,20 @@ import com.muslimtime.app.data.ManualLocationCatalog
 import com.muslimtime.app.data.PrayerCompletionState
 import com.muslimtime.app.data.PrayerCompletionStore
 import com.muslimtime.app.data.PrayerDataSyncManager
+import com.muslimtime.app.data.ReminderDiagnosticsStore
 import com.muslimtime.app.data.PrayerHistoryStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.data.PrayerTimesRefreshWorker
 import com.muslimtime.app.data.PrayerTimesRepository
 import com.muslimtime.app.data.QuranAudioBackendRepository
 import com.muslimtime.app.data.QuranEncRepository
+import com.muslimtime.app.data.QuranAudioOfflineRepository
 import com.muslimtime.app.data.QuranSura
 import com.muslimtime.app.data.QuranVerse
 import com.muslimtime.app.data.allahNameAzerbaijaniTitle
 import com.muslimtime.app.data.samplePrayerTimes
 import com.muslimtime.app.data.quranSuras
 import com.muslimtime.app.data.sampleDuas
-import com.muslimtime.app.data.supportedAzanSounds
 import com.muslimtime.app.data.supportedLanguages
 import com.muslimtime.app.notifications.AzanPlaybackService
 import com.muslimtime.app.notifications.PrayerRefreshScheduler
@@ -97,6 +102,8 @@ import com.muslimtime.app.notifications.PrayerReminderScheduler
 import com.muslimtime.app.notifications.QuranAudioPlaybackService
 import java.util.Locale
 import java.util.Calendar
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -401,6 +408,7 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
     private var hijriDateLabel: TextView? = null
     private var localTimeLabel: TextView? = null
     private var nextPrayerLabel: TextView? = null
+    private var personalPrayerMessageLabel: TextView? = null
     private var selectedDayLabel: TextView? = null
     private var imsakIftarSection: View? = null
     private var imsakTimeLabel: TextView? = null
@@ -447,6 +455,7 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
         hijriDateLabel = view.findViewById(R.id.hijri_date_text)
         localTimeLabel = view.findViewById(R.id.local_time_text)
         nextPrayerLabel = view.findViewById(R.id.next_prayer_text)
+        personalPrayerMessageLabel = view.findViewById(R.id.prayer_personal_message_text)
         selectedDayLabel = view.findViewById(R.id.selected_day_text)
         imsakIftarSection = view.findViewById(R.id.today_summary_card)
         imsakTimeLabel = view.findViewById(R.id.today_imsak_time)
@@ -581,11 +590,15 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
         )
         val prayerTimes = displayedPrayerTimes ?: run {
             nextPrayerLabel?.text = getString(R.string.next_prayer_placeholder)
+            nextPrayerLabel?.visibility = View.VISIBLE
+            personalPrayerMessageLabel?.text = ""
             return
         }
 
         if (prayerTimes.times.all { it.time == "--:--" }) {
             nextPrayerLabel?.text = getString(R.string.next_prayer_placeholder)
+            nextPrayerLabel?.visibility = View.VISIBLE
+            personalPrayerMessageLabel?.text = ""
             updateTimeline(now, prayerTimes)
             updatePrayerStatuses(now, prayerTimes)
             return
@@ -593,6 +606,8 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
 
         if (!isTodaySelected()) {
             nextPrayerLabel?.text = getString(R.string.next_prayer_selected_day, formatGregorianDate(selectedDate))
+            nextPrayerLabel?.visibility = View.VISIBLE
+            personalPrayerMessageLabel?.text = ""
             updateTimeline(now, prayerTimes)
             updatePrayerStatuses(now, prayerTimes)
             return
@@ -602,13 +617,147 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
         val minutesLeft = ((next.second.timeInMillis - now.timeInMillis) / 60000L).toInt().coerceAtLeast(0)
         val hours = minutesLeft / 60
         val minutes = minutesLeft % 60
+        val nextPrayerCountdownText = formatRelativeCountdown(minutesLeft)
         nextPrayerLabel?.text = getString(
             R.string.next_prayer_countdown,
-            next.first.name,
+            formatPrayerNameForCountdown(next.first.name),
             String.format(Locale.getDefault(), "%02d:%02d", hours, minutes),
+        )
+        nextPrayerLabel?.visibility = View.GONE
+        personalPrayerMessageLabel?.text = buildPersonalPrayerMessage(
+            now = now,
+            prayerTimes = prayerTimes,
+            nextPrayerName = next.first.name,
+            nextPrayerCountdown = nextPrayerCountdownText,
         )
         updateTimeline(now, prayerTimes)
         updatePrayerStatuses(now, prayerTimes)
+    }
+
+    private fun formatPrayerNameForCountdown(prayerName: String): String {
+        return when {
+            prayerName.endsWith(" namazı", ignoreCase = true) ->
+                prayerName.removeSuffix(" namazı") + " namazına"
+            prayerName.endsWith(" namazi", ignoreCase = true) ->
+                prayerName.removeSuffix(" namazi") + " namazina"
+            else -> prayerName
+        }
+    }
+
+    private fun buildPersonalPrayerMessage(
+        now: Calendar,
+        prayerTimes: CityPrayerTimes,
+        nextPrayerName: String,
+        nextPrayerCountdown: String,
+    ): String {
+        val context = requireContext()
+        val address = PrayerPreferences.personalizedAddress(context)
+        val blessing = pickPersonalPrayerBlessing(now)
+
+        findFirstPendingPrayer(prayerTimes, now)?.let { prayerName ->
+            val message = if (address.isNotBlank()) {
+                getString(
+                    R.string.prayer_personal_pending_with_name,
+                    address,
+                    prayerName,
+                    nextPrayerName,
+                    nextPrayerCountdown,
+                )
+            } else {
+                getString(
+                    R.string.prayer_personal_pending_no_name,
+                    prayerName,
+                    nextPrayerName,
+                    nextPrayerCountdown,
+                )
+            }
+            return getString(R.string.prayer_personal_message_with_blessing, message, blessing)
+        }
+
+        findLatestDonePrayerEntry(now.timeInMillis)?.let { entry ->
+            val elapsedText = formatRelativeElapsed(now.timeInMillis - entry.timestamp)
+            val message = if (address.isNotBlank()) {
+                getString(
+                    R.string.prayer_personal_done_with_name,
+                    address,
+                    entry.prayerName,
+                    elapsedText,
+                    nextPrayerName,
+                    nextPrayerCountdown,
+                )
+            } else {
+                getString(
+                    R.string.prayer_personal_done_no_name,
+                    entry.prayerName,
+                    elapsedText,
+                    nextPrayerName,
+                    nextPrayerCountdown,
+                )
+            }
+            return getString(R.string.prayer_personal_message_with_blessing, message, blessing)
+        }
+
+        val message = if (address.isNotBlank()) {
+            getString(R.string.prayer_personal_next_with_name, address, nextPrayerName, nextPrayerCountdown)
+        } else {
+            getString(R.string.prayer_personal_next_no_name, nextPrayerName, nextPrayerCountdown)
+        }
+        return getString(R.string.prayer_personal_message_with_blessing, message, blessing)
+    }
+
+    private fun pickPersonalPrayerBlessing(now: Calendar): String {
+        val blessingRes = when ((now.get(Calendar.DAY_OF_YEAR) + now.get(Calendar.MINUTE)) % 3) {
+            0 -> R.string.prayer_personal_blessing_1
+            1 -> R.string.prayer_personal_blessing_2
+            else -> R.string.prayer_personal_blessing_3
+        }
+        return getString(blessingRes)
+    }
+
+    private fun findFirstPendingPrayer(prayerTimes: CityPrayerTimes, now: Calendar): String? {
+        prayerTimes.times.forEachIndexed { index, prayer ->
+            if (index == 1) return@forEachIndexed
+            val hasTimePassed = buildPrayerCalendar(prayer.time, now, false).timeInMillis <= now.timeInMillis
+            val completionState = PrayerCompletionStore.getState(requireContext(), reminderRequestCodes[index])
+            if (hasTimePassed && completionState != PrayerCompletionState.DONE) {
+                return prayer.name
+            }
+        }
+        return null
+    }
+
+    private fun findLatestDonePrayerEntry(nowMs: Long): com.muslimtime.app.data.PrayerHistoryEntry? {
+        val startOfDay = Calendar.getInstance().apply {
+            timeInMillis = nowMs
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        return PrayerHistoryStore.loadEntries(requireContext())
+            .firstOrNull { it.timestamp in startOfDay..nowMs }
+    }
+
+    private fun formatRelativeElapsed(deltaMs: Long): String {
+        val totalMinutes = (deltaMs / 60000L).toInt().coerceAtLeast(0)
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return if (hours > 0) {
+            getString(R.string.prayer_relative_hours_minutes, hours, minutes)
+        } else {
+            getString(R.string.prayer_relative_minutes, minutes)
+        }
+    }
+
+    private fun formatRelativeCountdown(totalMinutes: Int): String {
+        val safeMinutes = totalMinutes.coerceAtLeast(0)
+        val hours = safeMinutes / 60
+        val minutes = safeMinutes % 60
+        return if (hours > 0) {
+            getString(R.string.prayer_relative_hours_minutes, hours, minutes)
+        } else {
+            getString(R.string.prayer_relative_minutes, minutes)
+        }
     }
 
     private fun findNextPrayer(prayerTimes: CityPrayerTimes, now: Calendar): Pair<com.muslimtime.app.data.PrayerTime, Calendar> {
@@ -979,6 +1128,13 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         val allahNamesButton = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.card_allah_names)
         val modeTitle = view.findViewById<TextView>(R.id.quran_mode_title)
         val modeHint = view.findViewById<TextView>(R.id.quran_mode_hint)
+        val offlineControls = view.findViewById<View>(R.id.quran_audio_offline_controls)
+        val filterAllButton = view.findViewById<Button>(R.id.quran_audio_filter_all)
+        val filterDownloadedButton = view.findViewById<Button>(R.id.quran_audio_filter_downloaded)
+        val downloadProgressContainer = view.findViewById<View>(R.id.quran_download_progress_container)
+        val downloadProgressTitle = view.findViewById<TextView>(R.id.quran_download_progress_title)
+        val downloadProgressBar = view.findViewById<ProgressBar>(R.id.quran_download_progress_bar)
+        val downloadProgressLabelView = view.findViewById<TextView>(R.id.quran_download_progress_label)
         val backToSurasButton = view.findViewById<Button>(R.id.quran_back_to_suras)
         val readNavigation = view.findViewById<View>(R.id.quran_read_navigation)
         val previousSuraButton = view.findViewById<Button>(R.id.quran_prev_sura)
@@ -996,6 +1152,7 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         val audioStopButton = view.findViewById<ImageButton>(R.id.quran_audio_stop)
         val contentList = view.findViewById<ListView>(R.id.quran_content_list)
         val scrollRoot = view.findViewById<ScrollView>(R.id.quran_scroll_root)
+        val scrollToTopButton = view.findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.quran_scroll_to_top)
         val contentCard = view.findViewById<View>(R.id.quran_content_card)
         val appFontScale = PrayerPreferences.appFontScale(requireContext())
         val suras = quranSuras()
@@ -1008,6 +1165,148 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         lateinit var renderAudioAyahs: (AudioSuraItem) -> Unit
         lateinit var renderReadVerses: () -> Unit
         var audioSurasLoading = false
+        val audioDownloadProgressBySura = mutableMapOf<Int, Pair<Long, Long>>()
+        var mobileDataApprovedSuraNumber: Int? = null
+        var audioFilterMode = AudioFilterMode.ALL
+
+        fun audioOfflineSummaryLabel(): String? {
+            val totalBytes = QuranAudioOfflineRepository.totalDownloadedBytes(requireContext())
+            if (totalBytes <= 0L) return null
+            return getString(
+                R.string.quran_audio_offline_summary,
+                QuranAudioOfflineRepository.formatSize(requireContext(), totalBytes),
+            )
+        }
+
+        fun filteredAudioSuras(source: List<AudioSuraItem>): List<AudioSuraItem> {
+            if (audioFilterMode == AudioFilterMode.ALL) return source
+            val downloaded = QuranAudioOfflineRepository.downloadedSuraNumbers(requireContext())
+            return source.filter { downloaded.contains(it.suraNumber) }
+        }
+
+        fun setModeHeaderVisible(visible: Boolean) {
+            val state = if (visible) View.VISIBLE else View.GONE
+            modeTitle.visibility = state
+            modeHint.visibility = state
+        }
+
+        fun updateAudioOfflineControls() {
+            val downloadedCount = QuranAudioOfflineRepository.downloadedSuraNumbers(requireContext()).size
+            val inAudioMode = modeTitle.text.toString() == getString(R.string.quran_audio_tab)
+            offlineControls.visibility = if (inAudioMode) View.VISIBLE else View.GONE
+            filterAllButton.backgroundTintList = null
+            filterDownloadedButton.backgroundTintList = null
+            filterAllButton.background = AppCompatResources.getDrawable(
+                requireContext(),
+                if (audioFilterMode == AudioFilterMode.ALL) R.drawable.bg_quran_filter_active else R.drawable.bg_quran_filter_inactive,
+            )
+            filterAllButton.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (audioFilterMode == AudioFilterMode.ALL) R.color.white else R.color.text_primary,
+                ),
+            )
+            filterDownloadedButton.background = AppCompatResources.getDrawable(
+                requireContext(),
+                if (audioFilterMode == AudioFilterMode.DOWNLOADED) R.drawable.bg_quran_filter_active else R.drawable.bg_quran_filter_inactive,
+            )
+            filterDownloadedButton.setTextColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (audioFilterMode == AudioFilterMode.DOWNLOADED) R.color.white else R.color.text_primary,
+                ),
+            )
+            val alpha = if (downloadedCount > 0 || audioFilterMode == AudioFilterMode.ALL) 1f else 0.55f
+            filterDownloadedButton.alpha = alpha
+        }
+
+        fun applyOfflineAyahsIfAvailable(suraNumber: Int, ayahs: List<AudioAyahItem>): List<AudioAyahItem> {
+            return QuranAudioOfflineRepository.resolvePlaybackAyahs(requireContext(), suraNumber, ayahs)
+        }
+
+        fun isWifiConnected(): Boolean {
+            val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+        }
+
+        fun confirmStreamingIfNeeded(suraNumber: Int, onContinue: () -> Unit) {
+            val offlineStatus = QuranAudioOfflineRepository.status(requireContext(), suraNumber)
+            if (offlineStatus.isDownloaded || isWifiConnected()) {
+                mobileDataApprovedSuraNumber = suraNumber
+                onContinue()
+                return
+            }
+            if (mobileDataApprovedSuraNumber == suraNumber) {
+                onContinue()
+                return
+            }
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.quran_audio_mobile_data_warning_title)
+                .setMessage(R.string.quran_audio_mobile_data_warning_message)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.quran_audio_mobile_data_continue) { _, _ ->
+                    mobileDataApprovedSuraNumber = suraNumber
+                    onContinue()
+                }
+                .show()
+        }
+
+        fun downloadProgressLabel(suraNumber: Int): String? {
+            val (downloaded, total) = audioDownloadProgressBySura[suraNumber] ?: return null
+            if (total <= 0L) return QuranAudioOfflineRepository.formatSize(requireContext(), downloaded)
+            return getString(
+                R.string.quran_audio_download_progress_template,
+                QuranAudioOfflineRepository.formatSize(requireContext(), downloaded),
+                QuranAudioOfflineRepository.formatSize(requireContext(), total),
+            )
+        }
+
+        fun hideDownloadProgressUi() {
+            downloadProgressContainer.visibility = View.GONE
+            downloadProgressBar.isIndeterminate = false
+            downloadProgressBar.progress = 0
+            downloadProgressTitle.text = getString(R.string.quran_audio_download_in_progress)
+            downloadProgressLabelView.text = ""
+        }
+
+        fun showDownloadProgressUi(sura: AudioSuraItem) {
+            val (downloaded, total) = audioDownloadProgressBySura[sura.suraNumber] ?: (0L to 0L)
+            downloadProgressContainer.visibility = View.VISIBLE
+            downloadProgressTitle.text = getString(R.string.quran_audio_download_progress_title, sura.nameLatin)
+            if (total > 0L) {
+                val percent = ((downloaded * 100L) / total).toInt().coerceIn(0, 100)
+                downloadProgressBar.isIndeterminate = false
+                downloadProgressBar.progress = percent
+                downloadProgressLabelView.text = "${getString(R.string.quran_audio_download_progress_percent, percent)} • ${
+                    getString(
+                        R.string.quran_audio_download_progress_template,
+                        QuranAudioOfflineRepository.formatSize(requireContext(), downloaded),
+                        QuranAudioOfflineRepository.formatSize(requireContext(), total),
+                    )
+                }"
+            } else {
+                downloadProgressBar.isIndeterminate = true
+                downloadProgressLabelView.text = QuranAudioOfflineRepository.formatSize(requireContext(), downloaded)
+            }
+        }
+
+        fun updateDownloadHintForSura(sura: AudioSuraItem) {
+            val progressLabel = downloadProgressLabel(sura.suraNumber) ?: return
+            modeHint.text = "${getString(R.string.quran_audio_download_in_progress)} • ${sura.nameLatin} • $progressLabel"
+            showDownloadProgressUi(sura)
+        }
+
+        fun refreshAudioSelectionAfterOfflineChange(suraNumber: Int, keepPlayingSelection: Boolean = true) {
+            val isCurrentSura = currentAudioSuraTitle?.startsWith("$suraNumber.") == true
+            if (!isCurrentSura || currentAudioAyahs.isEmpty()) return
+            if (keepPlayingSelection && currentPlayingUrl != null && currentPlaying) return
+            currentAudioAyahs = applyOfflineAyahsIfAvailable(suraNumber, currentAudioAyahs)
+            activeAudioIndex = currentPlayingUrl?.let { currentUrl ->
+                currentAudioAyahs.indexOfFirst { it.audioUrl == currentUrl }.takeIf { it >= 0 }
+            } ?: activeAudioIndex
+        }
 
         fun styleCard(button: com.google.android.material.card.MaterialCardView, selected: Boolean) {
             button.strokeWidth = if (selected) dpToPx(3) else dpToPx(1)
@@ -1024,6 +1323,15 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
             styleCard(allahNamesButton, mode == QuranMode.ALLAH_NAMES)
         }
 
+        fun updateScrollToTopButton(scrollY: Int) {
+            val shouldShow = scrollY > dpToPx(240)
+            if (shouldShow && scrollToTopButton.visibility != View.VISIBLE) {
+                scrollToTopButton.show()
+            } else if (!shouldShow && scrollToTopButton.visibility == View.VISIBLE) {
+                scrollToTopButton.hide()
+            }
+        }
+
         fun updateReadFontButtons() {
             fontDecreaseButton.isEnabled = currentReadFontSp > 18f
             fontIncreaseButton.isEnabled = currentReadFontSp < 34f
@@ -1033,10 +1341,17 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
 
         fun updateAudioControls() {
             val hasSelection = activeAudioIndex != null && currentAudioAyahs.isNotEmpty()
-            val canStartFullPlayback = currentAudioSuras.isNotEmpty()
+            val canStartFullPlayback = filteredAudioSuras(currentAudioSuras).isNotEmpty()
             audioPlayButton.isEnabled = hasSelection || canStartFullPlayback
             audioPauseButton.isEnabled = hasSelection && currentPlaying
             audioStopButton.isEnabled = hasSelection || currentPlayingUrl != null
+            audioPlayButton.contentDescription = getString(
+                if (audioFilterMode == AudioFilterMode.DOWNLOADED) {
+                    R.string.quran_audio_play_button_downloaded
+                } else {
+                    R.string.quran_audio_play_button
+                },
+            )
             audioPlayButton.alpha = if (audioPlayButton.isEnabled) 1f else 0.4f
             audioPauseButton.alpha = if (audioPauseButton.isEnabled) 1f else 0.4f
             audioStopButton.alpha = if (audioStopButton.isEnabled) 1f else 0.4f
@@ -1067,8 +1382,20 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         fun updateAudioPlayerCard() {
             val activeAyah = currentAudioAyahs.getOrNull(activeAudioIndex ?: -1)
             if (activeAyah == null) {
-                audioNowPlayingTitle.text = getString(R.string.quran_audio_now_playing_idle)
-                audioNowPlayingSubtitle.text = getString(R.string.quran_audio_select_sura_hint)
+                audioNowPlayingTitle.text = getString(
+                    if (audioFilterMode == AudioFilterMode.DOWNLOADED) {
+                        R.string.quran_audio_now_playing_idle_downloaded
+                    } else {
+                        R.string.quran_audio_now_playing_idle
+                    },
+                )
+                audioNowPlayingSubtitle.text = getString(
+                    if (audioFilterMode == AudioFilterMode.DOWNLOADED) {
+                        R.string.quran_audio_filter_downloaded
+                    } else {
+                        R.string.quran_audio_play_button
+                    },
+                )
                 audioProgress.progress = 0
                 audioProgressLabel.text = getString(R.string.quran_audio_progress_idle)
             } else {
@@ -1136,6 +1463,37 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
             }
         }
 
+        fun createReadSuraGridAdapter(items: List<QuranSura>, onOpen: (QuranSura) -> Unit): BaseAdapter {
+            val inflater = LayoutInflater.from(requireContext())
+            val rows = items.chunked(2)
+            return object : BaseAdapter() {
+                override fun getCount(): Int = rows.size
+                override fun getItem(position: Int): Any = rows[position]
+                override fun getItemId(position: Int): Long = position.toLong()
+
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    val itemView = convertView ?: inflater.inflate(R.layout.item_quran_sura_grid_row, parent, false)
+                    val rowItems = rows[position]
+                    bindReadSuraCard(
+                        root = itemView.findViewById(R.id.left_card_root),
+                        numberView = itemView.findViewById(R.id.left_sura_number),
+                        nameView = itemView.findViewById(R.id.left_sura_name),
+                        sura = rowItems.getOrNull(0),
+                        onOpen = onOpen,
+                    )
+                    bindReadSuraCard(
+                        root = itemView.findViewById(R.id.right_card_root),
+                        numberView = itemView.findViewById(R.id.right_sura_number),
+                        nameView = itemView.findViewById(R.id.right_sura_name),
+                        sura = rowItems.getOrNull(1),
+                        onOpen = onOpen,
+                    )
+                    applyScaledTextTree(itemView, appFontScale)
+                    return itemView
+                }
+            }
+        }
+
         fun sendAudioServiceAction(action: String) {
             ContextCompat.startForegroundService(
                 requireContext(),
@@ -1159,7 +1517,7 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                     result.onSuccess { suras ->
                         currentAudioSuras = suras
                         if (styleForCurrentAudioTab(modeTitle.text.toString(), currentAudioSuraTitle)) {
-                            modeHint.text = if (suras.any { it.nameLatin.contains("(Demo)") }) {
+                            modeHint.text = audioOfflineSummaryLabel() ?: if (suras.any { it.nameLatin.contains("(Demo)") }) {
                                 getString(R.string.quran_audio_demo_mode)
                             } else {
                                 getString(R.string.quran_audio_select_sura_hint)
@@ -1233,16 +1591,35 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                     val nameView = itemView.findViewById<TextView>(R.id.sura_name)
                     val metaView = itemView.findViewById<TextView>(R.id.sura_meta)
                     val actionButton = itemView.findViewById<Button>(R.id.sura_action_button)
+                    val downloadButton = itemView.findViewById<Button>(R.id.sura_download_button)
+                    val cardRoot = itemView.findViewById<View>(R.id.sura_card_root)
 
                     val isCurrentSura = currentAudioSuraTitle?.startsWith("${sura.suraNumber}.") == true && currentPlayingUrl != null
+                    val offlineStatus = QuranAudioOfflineRepository.status(requireContext(), sura.suraNumber)
+                    val isDownloading = QuranAudioOfflineRepository.isDownloading(sura.suraNumber)
+                    val progressLabel = downloadProgressLabel(sura.suraNumber)
                     numberView.text = sura.suraNumber.toString()
                     nameView.text = sura.nameLatin
                     actionButton.visibility = View.VISIBLE
-                    metaView.text = when {
-                        isCurrentSura && currentPlaying -> getString(R.string.quran_audio_state_playing)
-                        isCurrentSura -> getString(R.string.quran_audio_state_paused)
-                        else -> sura.nameArabic.ifBlank { "" }
+                    downloadButton.visibility = View.VISIBLE
+                    val offlineMeta = when {
+                        isDownloading -> progressLabel?.let {
+                            "${getString(R.string.quran_audio_download_in_progress)} • $it"
+                        } ?: getString(R.string.quran_audio_download_in_progress)
+                        offlineStatus.isDownloaded -> "${getString(R.string.quran_audio_downloaded_label)} • ${
+                            QuranAudioOfflineRepository.formatSize(requireContext(), offlineStatus.totalBytes)
+                        }"
+                        else -> sura.nameArabic.ifBlank { getString(R.string.quran_audio_stream_only) }
                     }
+                    metaView.text = when {
+                        isCurrentSura && currentPlaying -> "${getString(R.string.quran_audio_state_playing)}\n$offlineMeta"
+                        isCurrentSura -> "${getString(R.string.quran_audio_state_paused)}\n$offlineMeta"
+                        else -> offlineMeta
+                    }
+                    cardRoot.background = AppCompatResources.getDrawable(
+                        requireContext(),
+                        if (offlineStatus.isDownloaded) R.drawable.bg_quran_sura_card_downloaded else R.drawable.bg_quran_sura_card,
+                    )
 
                     actionButton.text = if (isCurrentSura) {
                         getString(R.string.quran_audio_stop_button)
@@ -1267,7 +1644,159 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                             updateAudioPlayerCard()
                             renderAudioModeList?.invoke()
                         } else {
-                            renderAudioAyahs(sura)
+                            confirmStreamingIfNeeded(sura.suraNumber) {
+                                renderAudioAyahs(sura)
+                            }
+                        }
+                    }
+
+                    downloadButton.text = when {
+                        isDownloading -> getString(R.string.quran_audio_download_in_progress)
+                        offlineStatus.isDownloaded -> getString(R.string.quran_audio_delete_button)
+                        else -> getString(R.string.quran_audio_download_button)
+                    }
+                    downloadButton.isEnabled = !isDownloading
+                    downloadButton.backgroundTintList = null
+                    downloadButton.background = AppCompatResources.getDrawable(
+                        requireContext(),
+                        if (offlineStatus.isDownloaded) R.drawable.bg_quran_delete_button else R.drawable.bg_widget_action,
+                    )
+                    downloadButton.setTextColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            if (offlineStatus.isDownloaded) R.color.white else R.color.text_primary,
+                        ),
+                    )
+                    downloadButton.setOnClickListener {
+                        runCatching {
+                            val currentlyDownloading = QuranAudioOfflineRepository.isDownloading(sura.suraNumber)
+                            val currentOfflineStatus = QuranAudioOfflineRepository.status(requireContext(), sura.suraNumber)
+                            val currentIsCurrentSura =
+                                currentAudioSuraTitle?.startsWith("${sura.suraNumber}.") == true && currentPlayingUrl != null
+
+                            if (currentlyDownloading) {
+                                updateDownloadHintForSura(sura)
+                                return@setOnClickListener
+                            }
+
+                            if (currentOfflineStatus.isDownloaded) {
+                                ReminderDiagnosticsStore.record(
+                                    requireContext().applicationContext,
+                                    "quran_audio_delete_tapped",
+                                    "sura=${sura.suraNumber}",
+                                )
+                                val deletingCurrentSura = currentAudioSuraTitle?.startsWith("${sura.suraNumber}.") == true
+                                if (currentIsCurrentSura && currentPlayingUrl != null) {
+                                    sendAudioServiceAction(QuranAudioPlaybackService.ACTION_STOP)
+                                    currentPlaying = false
+                                    currentPlayingUrl = null
+                                    activeAudioIndex = null
+                                    currentAudioPositionMs = 0
+                                    currentAudioDurationMs = 0
+                                }
+                                QuranAudioOfflineRepository.deleteSura(requireContext(), sura.suraNumber)
+                                modeHint.text = audioOfflineSummaryLabel() ?: getString(R.string.quran_audio_select_sura_hint)
+                                hideDownloadProgressUi()
+                                renderAudioModeList?.invoke()
+                                updateAudioPlayerCard()
+                                if (deletingCurrentSura) {
+                                    val appContext = requireContext().applicationContext
+                                    thread {
+                                        val refreshed = QuranAudioBackendRepository.fetchAyahs(appContext, sura.suraNumber)
+                                        activity?.runOnUiThread {
+                                            if (!isAdded) return@runOnUiThread
+                                            refreshed.onSuccess { remoteAyahs ->
+                                                currentAudioAyahs = remoteAyahs
+                                                activeAudioIndex = null
+                                                renderAudioAyahList?.invoke(null)
+                                            }
+                                        }
+                                    }
+                                }
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.quran_audio_delete_done, sura.nameLatin),
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                                return@setOnClickListener
+                            }
+
+                            ReminderDiagnosticsStore.record(
+                                requireContext().applicationContext,
+                                "quran_audio_download_tapped",
+                                "sura=${sura.suraNumber}",
+                            )
+                            modeHint.text = getString(R.string.quran_audio_download_started, sura.nameLatin)
+                            audioDownloadProgressBySura[sura.suraNumber] = 0L to 0L
+                            showDownloadProgressUi(sura)
+                            updateDownloadHintForSura(sura)
+                            val appContext = requireContext().applicationContext
+                            thread {
+                                val result = QuranAudioBackendRepository.fetchAyahs(appContext, sura.suraNumber).fold(
+                                    onSuccess = { ayahs ->
+                                        QuranAudioOfflineRepository.downloadSura(
+                                                appContext,
+                                                sura.suraNumber,
+                                                ayahs,
+                                            ) { downloadedBytes, totalBytes ->
+                                                activity?.runOnUiThread {
+                                                    if (!isAdded) return@runOnUiThread
+                                                    audioDownloadProgressBySura[sura.suraNumber] = downloadedBytes to totalBytes
+                                                    updateDownloadHintForSura(sura)
+                                                }
+                                            }
+                                        },
+                                        onFailure = { Result.failure(it) },
+                                    )
+                                activity?.runOnUiThread {
+                                    if (!isAdded) return@runOnUiThread
+                                    audioDownloadProgressBySura.remove(sura.suraNumber)
+                                    result.onSuccess {
+                                        ReminderDiagnosticsStore.record(
+                                            requireContext().applicationContext,
+                                            "quran_audio_download_success",
+                                            "sura=${sura.suraNumber}",
+                                        )
+                                        refreshAudioSelectionAfterOfflineChange(sura.suraNumber)
+                                        hideDownloadProgressUi()
+                                        modeHint.text = audioOfflineSummaryLabel()
+                                            ?: getString(R.string.quran_audio_download_done, sura.nameLatin)
+                                        renderAudioModeList?.invoke()
+                                        updateAudioPlayerCard()
+                                        Toast.makeText(
+                                            requireContext(),
+                                            getString(R.string.quran_audio_download_done, sura.nameLatin),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }.onFailure { error ->
+                                        ReminderDiagnosticsStore.record(
+                                            requireContext().applicationContext,
+                                            "quran_audio_download_failed",
+                                            "sura=${sura.suraNumber} error=${error.message.orEmpty()}",
+                                        )
+                                        hideDownloadProgressUi()
+                                        modeHint.text = getString(R.string.quran_audio_download_failed)
+                                        renderAudioModeList?.invoke()
+                                        Toast.makeText(
+                                            requireContext(),
+                                            getString(R.string.quran_audio_download_failed),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                }
+                            }
+                        }.onFailure { error ->
+                            ReminderDiagnosticsStore.record(
+                                requireContext().applicationContext,
+                                "quran_audio_download_click_crash",
+                                "sura=${sura.suraNumber} error=${error.message.orEmpty()}",
+                            )
+                            hideDownloadProgressUi()
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.quran_audio_download_failed),
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
                     }
 
@@ -1284,7 +1813,9 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                             updateAudioPlayerCard()
                             renderAudioModeList?.invoke()
                         } else {
-                            renderAudioAyahs(sura)
+                            confirmStreamingIfNeeded(sura.suraNumber) {
+                                renderAudioAyahs(sura)
+                            }
                         }
                     }
 
@@ -1296,18 +1827,31 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
 
         fun createAllahNamesAdapter(names: List<AllahName>): BaseAdapter {
             val inflater = LayoutInflater.from(requireContext())
+            val rows = names.chunked(2)
             return object : BaseAdapter() {
-                override fun getCount(): Int = names.size
-                override fun getItem(position: Int): Any = names[position]
-                override fun getItemId(position: Int): Long = names[position].number.toLong()
+                override fun getCount(): Int = rows.size
+                override fun getItem(position: Int): Any = rows[position]
+                override fun getItemId(position: Int): Long = position.toLong()
 
                 override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                    val itemView = convertView ?: inflater.inflate(R.layout.item_allah_name, parent, false)
-                    val name = names[position]
-                    itemView.findViewById<TextView>(R.id.allah_number).text = name.number.toString()
-                    itemView.findViewById<TextView>(R.id.allah_title).text = allahNameAzerbaijaniTitle(name.number)
-                    itemView.findViewById<TextView>(R.id.allah_transliteration).text = name.transliteration
-                    itemView.findViewById<TextView>(R.id.allah_arabic).text = name.arabic
+                    val itemView = convertView ?: inflater.inflate(R.layout.item_allah_name_grid_row, parent, false)
+                    val rowItems = rows[position]
+                    bindAllahNameCard(
+                        root = itemView.findViewById(R.id.left_card_root),
+                        numberView = itemView.findViewById(R.id.left_allah_number),
+                        titleView = itemView.findViewById(R.id.left_allah_title),
+                        transliterationView = itemView.findViewById(R.id.left_allah_transliteration),
+                        arabicView = itemView.findViewById(R.id.left_allah_arabic),
+                        name = rowItems.getOrNull(0),
+                    )
+                    bindAllahNameCard(
+                        root = itemView.findViewById(R.id.right_card_root),
+                        numberView = itemView.findViewById(R.id.right_allah_number),
+                        titleView = itemView.findViewById(R.id.right_allah_title),
+                        transliterationView = itemView.findViewById(R.id.right_allah_transliteration),
+                        arabicView = itemView.findViewById(R.id.right_allah_arabic),
+                        name = rowItems.getOrNull(1),
+                    )
                     applyScaledTextTree(itemView, appFontScale)
                     return itemView
                 }
@@ -1316,6 +1860,15 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
 
         playAudioAyah = playAudioAyah@{ index ->
             val ayah = currentAudioAyahs.getOrNull(index) ?: return@playAudioAyah
+            val suraNumber = ayah.ayahKey.substringBefore(":").toIntOrNull() ?: -1
+            val offlineStatus = QuranAudioOfflineRepository.status(requireContext(), suraNumber)
+            val isStreamingUrl = ayah.audioUrl.startsWith("http://") || ayah.audioUrl.startsWith("https://")
+            if (isStreamingUrl && !offlineStatus.isDownloaded && !isWifiConnected() && mobileDataApprovedSuraNumber != suraNumber) {
+                confirmStreamingIfNeeded(suraNumber) {
+                    playAudioAyah(index)
+                }
+                return@playAudioAyah
+            }
             activeAudioIndex = index
             if (currentPlayingUrl == ayah.audioUrl) {
                 val action = if (currentPlaying) {
@@ -1357,9 +1910,11 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         }
 
         renderAudioAyahs = { sura ->
+            mobileDataApprovedSuraNumber = null
             currentAudioSuraTitle = "${sura.suraNumber}. ${sura.nameLatin}"
             modeTitle.text = getString(R.string.quran_audio_tab)
             modeHint.text = getString(R.string.quran_audio_loading)
+            setModeHeaderVisible(false)
             backToSurasButton.visibility = View.GONE
             readNavigation.visibility = View.GONE
             audioControls.visibility = View.VISIBLE
@@ -1371,18 +1926,24 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                 val result = QuranAudioBackendRepository.fetchAyahs(requireContext(), sura.suraNumber)
                 requireActivity().runOnUiThread {
                     result.onSuccess { ayahs ->
-                        currentAudioAyahs = ayahs
+                        currentAudioAyahs = applyOfflineAyahsIfAvailable(sura.suraNumber, ayahs)
                         val startIndex = rememberedAudioAyahKey?.let { rememberedKey ->
-                            ayahs.indexOfFirst { it.ayahKey == rememberedKey }.takeIf { it >= 0 }
+                            currentAudioAyahs.indexOfFirst { it.ayahKey == rememberedKey }.takeIf { it >= 0 }
                         } ?: 0
                         activeAudioIndex = startIndex
-                        if (sura.nameLatin.contains("(Demo)")) {
+                        val offlineStatus = QuranAudioOfflineRepository.status(requireContext(), sura.suraNumber)
+                        if (offlineStatus.isDownloaded) {
+                            modeHint.text = getString(
+                                R.string.quran_audio_download_ready,
+                                QuranAudioOfflineRepository.formatSize(requireContext(), offlineStatus.totalBytes),
+                            )
+                        } else if (sura.nameLatin.contains("(Demo)")) {
                             modeHint.text = getString(R.string.quran_audio_demo_mode)
                         } else {
                             modeHint.text = getString(R.string.quran_audio_select_sura_hint)
                         }
                         renderAudioModeList?.invoke()
-                        if (ayahs.isNotEmpty()) {
+                        if (currentAudioAyahs.isNotEmpty()) {
                             playAudioAyah(startIndex)
                         } else {
                             updateAudioPlayerCard()
@@ -1398,6 +1959,7 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         renderAudioAyahList = { activeIndex ->
             modeTitle.text = getString(R.string.quran_audio_tab)
             modeHint.text = getString(R.string.quran_audio_ready_hint)
+            setModeHeaderVisible(false)
             backToSurasButton.visibility = View.GONE
             readNavigation.visibility = View.GONE
             audioControls.visibility = View.VISIBLE
@@ -1407,35 +1969,57 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         }
 
         fun renderAudioMode() {
+            mobileDataApprovedSuraNumber = null
             activeAudioIndex = null
             modeTitle.text = getString(R.string.quran_audio_tab)
-            modeHint.text = getString(R.string.quran_audio_loading)
+            modeHint.text = audioOfflineSummaryLabel() ?: getString(R.string.quran_audio_loading)
+            setModeHeaderVisible(false)
+            if (audioDownloadProgressBySura.isEmpty()) hideDownloadProgressUi()
             backToSurasButton.visibility = View.GONE
             readNavigation.visibility = View.GONE
             audioControls.visibility = View.VISIBLE
             styleTabs(QuranMode.AUDIO)
             contentList.setOnItemClickListener(null)
             renderAudioModeList?.invoke()
+            updateAudioOfflineControls()
             loadAudioSurasIfNeeded()
         }
 
         renderAudioModeList = {
+            if (currentAudioAyahs.isEmpty()) {
+                modeHint.text = when {
+                    audioFilterMode == AudioFilterMode.DOWNLOADED && filteredAudioSuras(currentAudioSuras).isEmpty() ->
+                        getString(R.string.quran_audio_offline_manage_empty_hint)
+                    else -> audioOfflineSummaryLabel() ?: getString(R.string.quran_audio_select_sura_hint)
+                }
+            }
+            val visibleSuras = filteredAudioSuras(currentAudioSuras)
             if (currentAudioSuras.isEmpty()) {
                 contentList.adapter = ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_list_item_1,
                     listOf(getString(R.string.quran_audio_loading)),
                 )
+            } else if (visibleSuras.isEmpty()) {
+                contentList.adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_list_item_1,
+                    listOf(getString(R.string.quran_audio_offline_manage_empty)),
+                )
             } else {
-                contentList.adapter = createAudioSuraAdapter(currentAudioSuras)
+                contentList.adapter = createAudioSuraAdapter(visibleSuras)
             }
             contentList.setOnItemClickListener(null)
+            updateAudioOfflineControls()
             resizeListView(contentList)
         }
 
         fun renderAllahNames(names: List<AllahName>) {
             modeTitle.text = getString(R.string.quran_allah_names_tab)
             modeHint.text = getString(R.string.quran_allah_names_hint)
+            setModeHeaderVisible(true)
+            offlineControls.visibility = View.GONE
+            hideDownloadProgressUi()
             backToSurasButton.visibility = View.GONE
             fontControls.visibility = View.GONE
             readNavigation.visibility = View.GONE
@@ -1449,6 +2033,9 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         fun renderAllahNamesMode() {
             modeTitle.text = getString(R.string.quran_allah_names_tab)
             modeHint.text = getString(R.string.quran_allah_names_loading)
+            setModeHeaderVisible(true)
+            offlineControls.visibility = View.GONE
+            hideDownloadProgressUi()
             backToSurasButton.visibility = View.GONE
             fontControls.visibility = View.GONE
             readNavigation.visibility = View.GONE
@@ -1485,6 +2072,9 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
             }
             modeTitle.text = "${sura.number}. ${sura.name}"
             modeHint.text = getString(R.string.quran_read_hint)
+            setModeHeaderVisible(true)
+            offlineControls.visibility = View.GONE
+            hideDownloadProgressUi()
             backToSurasButton.visibility = View.VISIBLE
             fontControls.visibility = View.VISIBLE
             updateReadNavigation()
@@ -1500,6 +2090,9 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
             currentReadSura = sura
             modeTitle.text = "${sura.number}. ${sura.name}"
             modeHint.text = getString(R.string.quran_sura_loading)
+            setModeHeaderVisible(true)
+            offlineControls.visibility = View.GONE
+            hideDownloadProgressUi()
             backToSurasButton.visibility = View.VISIBLE
             fontControls.visibility = View.VISIBLE
             readNavigation.visibility = View.GONE
@@ -1538,20 +2131,16 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
             currentReadVerses = emptyList()
             modeTitle.text = getString(R.string.quran_read_card_title)
             modeHint.text = getString(R.string.quran_sura_list_hint)
+            setModeHeaderVisible(true)
+            offlineControls.visibility = View.GONE
+            hideDownloadProgressUi()
             backToSurasButton.visibility = View.GONE
             fontControls.visibility = View.GONE
             readNavigation.visibility = View.GONE
             audioControls.visibility = View.GONE
             styleTabs(QuranMode.READ)
-            contentList.adapter = createSuraAdapter(
-                suras.map { it.number to it.name },
-            ) { position ->
-                ""
-            }
-            contentList.setOnItemClickListener { _, _, position, _ ->
-                val sura = suras[position]
-                renderSuraDetail(sura)
-            }
+            contentList.adapter = createReadSuraGridAdapter(suras, ::renderSuraDetail)
+            contentList.setOnItemClickListener(null)
             resizeListView(contentList)
         }
 
@@ -1602,8 +2191,13 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                     updateAudioPlayerCard()
                 }
                 activeAudioIndex == null && currentAudioSuras.isNotEmpty() -> {
+                    val playableSuras = filteredAudioSuras(currentAudioSuras)
+                    if (playableSuras.isEmpty()) return@setOnClickListener
                     modeHint.text = getString(R.string.quran_audio_state_playing)
-                    renderAudioAyahs(currentAudioSuras.first())
+                    val firstSura = playableSuras.first()
+                    confirmStreamingIfNeeded(firstSura.suraNumber) {
+                        renderAudioAyahs(firstSura)
+                    }
                 }
                 activeAudioIndex != null && currentAudioAyahs.isNotEmpty() -> {
                     playAudioAyah(0)
@@ -1644,6 +2238,25 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                 modeTitle.text.toString() == getString(R.string.quran_allah_names_tab) -> renderAllahNamesMode()
                 else -> renderReadMode()
             }
+        }
+        filterAllButton.setOnClickListener {
+            audioFilterMode = AudioFilterMode.ALL
+            renderAudioModeList?.invoke()
+            updateAudioPlayerCard()
+        }
+        filterDownloadedButton.setOnClickListener {
+            audioFilterMode = AudioFilterMode.DOWNLOADED
+            renderAudioModeList?.invoke()
+            updateAudioPlayerCard()
+        }
+        scrollToTopButton.setOnClickListener {
+            scrollRoot.post { scrollRoot.smoothScrollTo(0, 0) }
+        }
+        scrollRoot.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            updateScrollToTopButton(scrollY)
+        }
+        scrollRoot.post {
+            updateScrollToTopButton(scrollRoot.scrollY)
         }
 
         val remembered = PrayerPreferences.loadLastQuranAudioPlayback(requireContext())
@@ -1701,6 +2314,11 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         ALLAH_NAMES,
     }
 
+    private enum class AudioFilterMode {
+        ALL,
+        DOWNLOADED,
+    }
+
     private fun resizeListView(listView: ListView) {
         val adapter = listView.adapter ?: return
         var totalHeight = 0
@@ -1714,6 +2332,46 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         params.height = totalHeight + (listView.dividerHeight * (adapter.count - 1)).coerceAtLeast(0) + listView.paddingTop + listView.paddingBottom
         listView.layoutParams = params
         listView.requestLayout()
+    }
+
+    private fun bindReadSuraCard(
+        root: View,
+        numberView: TextView,
+        nameView: TextView,
+        sura: QuranSura?,
+        onOpen: (QuranSura) -> Unit,
+    ) {
+        if (sura == null) {
+            root.visibility = View.INVISIBLE
+            root.isClickable = false
+            root.setOnClickListener(null)
+            return
+        }
+        root.visibility = View.VISIBLE
+        numberView.text = sura.number.toString()
+        nameView.text = sura.name
+        root.isClickable = true
+        root.isFocusable = true
+        root.setOnClickListener { onOpen(sura) }
+    }
+
+    private fun bindAllahNameCard(
+        root: View,
+        numberView: TextView,
+        titleView: TextView,
+        transliterationView: TextView,
+        arabicView: TextView,
+        name: AllahName?,
+    ) {
+        if (name == null) {
+            root.visibility = View.INVISIBLE
+            return
+        }
+        root.visibility = View.VISIBLE
+        numberView.text = name.number.toString()
+        titleView.text = allahNameAzerbaijaniTitle(name.number)
+        transliterationView.text = name.transliteration
+        arabicView.text = name.arabic
     }
 
     private fun formatTimeMs(value: Int): String {
@@ -2110,6 +2768,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
     private var prayerSourceSummaryView: TextView? = null
     private var soundSettingsSummaryView: TextView? = null
     private var profileSettingsSummaryView: TextView? = null
+    private var profileQuickActionTextView: TextView? = null
     private var dialogLocationSummaryView: TextView? = null
     private var dialogLocationModeBadgeView: TextView? = null
     private var dialogCityInput: Spinner? = null
@@ -2117,6 +2776,8 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
     private var dialogUseDetectedButton: Button? = null
     private var dialogAutoLocationSwitch: SwitchCompat? = null
     private var dialogAutoLocationHelpText: TextView? = null
+    private var dialogLocationPrayerSourceSpinner: Spinner? = null
+    private var dialogLocationPrayerSourceHelpText: TextView? = null
     private var dialogCountryOptions: List<ManualCountryOption> = emptyList()
     private var dialogCityOptions: List<ManualCityOption> = emptyList()
     private var suppressLocationSpinnerCallbacks = false
@@ -2130,6 +2791,31 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
     private var soundDialog: AlertDialog? = null
     private var appearanceDialog: AlertDialog? = null
     private var appearanceSettingsSummaryView: TextView? = null
+    private val customAzanPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        val context = context ?: return@registerForActivityResult
+        if (uri == null) {
+            Toast.makeText(context, getString(R.string.azan_sound_add_failed), Toast.LENGTH_SHORT).show()
+            return@registerForActivityResult
+        }
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
+            val label = resolveAudioDisplayName(uri).ifBlank { uri.lastPathSegment ?: "audio" }
+            PrayerPreferences.setCustomAzan(context, uri.toString(), label)
+            val options = azanSoundOptions(context)
+            updateSoundSettingsSummary(PrayerPreferences.CUSTOM_AZAN_RAW_NAME, options)
+            soundDialog?.dismiss()
+            soundDialog = null
+            showSoundSettingsDialog()
+            Toast.makeText(context, getString(R.string.azan_sound_added), Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(context, getString(R.string.azan_sound_add_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
     private var suppressLocationDialogAutoSave = false
     private var suppressPrayerSourceDialogAutoSave = false
     private var suppressNotificationDialogAutoSave = false
@@ -2155,37 +2841,30 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         applySharedUiPreferences(view, requireContext())
         val text = view.findViewById<TextView>(R.id.timer_label)
         val infoCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.info_card)
-        val profileSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.profile_settings_card)
+        val profileQuickAction = view.findViewById<View>(R.id.profile_quick_action)
         val locationSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.location_settings_card)
         val prayerSourceSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.prayer_source_settings_card)
         val soundSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.sound_settings_card)
-        val appearanceSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.appearance_settings_card)
         val locationSummary = view.findViewById<TextView>(R.id.settings_location_summary)
-        val profileSettingsSummary = view.findViewById<TextView>(R.id.profile_settings_summary)
+        val profileQuickActionText = view.findViewById<TextView>(R.id.profile_quick_action_text)
         val locationModeBadge = view.findViewById<TextView>(R.id.settings_location_mode_badge)
         val prayerSourceSummary = view.findViewById<TextView>(R.id.prayer_source_summary)
         val soundSettingsSummary = view.findViewById<TextView>(R.id.sound_settings_summary)
-        val appearanceSettingsSummary = view.findViewById<TextView>(R.id.appearance_settings_summary)
-        val languagePickerButton = view.findViewById<Button>(R.id.language_picker_button)
         val notificationSettingsCard = view.findViewById<com.google.android.material.card.MaterialCardView>(R.id.notification_settings_card)
         val notificationSettingsSummary = view.findViewById<TextView>(R.id.notification_settings_summary)
         val setupBanner = view.findViewById<TextView>(R.id.setup_banner)
         val languages = supportedLanguages(requireContext())
-        val azanSounds = supportedAzanSounds(requireContext())
+        val azanSounds = azanSoundOptions(requireContext())
         val suggestedLocation = PrayerPreferences.suggestedLocation(requireContext())
-        val currentLanguage = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-            .ifBlank { Locale.getDefault().language }
-            .split(",")
-            .first()
-            .substringBefore("-")
         val selectedAzanRawName = PrayerPreferences.getSelectedAzanRawName(requireContext())
         text.text = getString(R.string.settings_intro)
         locationSummaryView = locationSummary
         locationModeBadgeView = locationModeBadge
         prayerSourceSummaryView = prayerSourceSummary
         soundSettingsSummaryView = soundSettingsSummary
-        profileSettingsSummaryView = profileSettingsSummary
-        appearanceSettingsSummaryView = appearanceSettingsSummary
+        profileSettingsSummaryView = null
+        profileQuickActionTextView = profileQuickActionText
+        appearanceSettingsSummaryView = null
         val versionName = runCatching {
             requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
         }.getOrNull() ?: "1.0"
@@ -2193,42 +2872,26 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         infoCard.setOnClickListener {
             showInfoDialog(versionName)
         }
-        profileSettingsCard.setOnClickListener {
+        profileQuickAction.setOnClickListener {
             showProfileSettingsDialog()
         }
-        val selectedIndex = languages.indexOfFirst { it.code == currentLanguage }.takeIf { it >= 0 } ?: 0
-        languagePickerButton.text = languages.getOrElse(selectedIndex) { languages.first() }.code.uppercase(Locale.getDefault())
         updateSoundSettingsSummary(selectedAzanRawName, azanSounds)
         updateProfileSettingsSummary()
-        languagePickerButton.setOnClickListener {
-            val labels = languages.map { "${it.code.uppercase(Locale.getDefault())} - ${it.label}" }.toTypedArray()
-            AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.language_label))
-                .setItems(labels) { _, which ->
-                    val chosen = languages[which]
-                    languagePickerButton.text = chosen.code.uppercase(Locale.getDefault())
-                    if (chosen.code != currentLanguage) {
-                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(chosen.code))
-                    }
-                }
-                .show()
-        }
 
         val savedLocation = PrayerPreferences.loadSelectedLocation(requireContext()) ?: suggestedLocation
-        updateLocationCardSummary(savedLocation.city, savedLocation.country)
+        updateLocationCardSummary(
+            savedLocation.city,
+            savedLocation.country,
+            PrayerPreferences.getSelectedPrayerSource(requireContext()),
+        )
         updatePrayerSourceSummary(PrayerPreferences.getSelectedPrayerSource(requireContext()))
         updateLocationModeBadge(PrayerPreferences.isAutoLocationEnabled(requireContext()))
         locationSettingsCard.setOnClickListener {
             showLocationSettingsDialog()
         }
-        prayerSourceSettingsCard.setOnClickListener {
-            showPrayerSourceSettingsDialog()
-        }
+        prayerSourceSettingsCard.visibility = View.GONE
         soundSettingsCard.setOnClickListener {
             showSoundSettingsDialog()
-        }
-        appearanceSettingsCard.setOnClickListener {
-            showAppearanceSettingsDialog()
         }
         notificationSettingsCard.setOnClickListener {
             showNotificationSettingsDialog()
@@ -2263,6 +2926,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         prayerSourceSummaryView = null
         soundSettingsSummaryView = null
         profileSettingsSummaryView = null
+        profileQuickActionTextView = null
         appearanceSettingsSummaryView = null
         dialogLocationSummaryView = null
         dialogLocationModeBadgeView = null
@@ -2274,6 +2938,8 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         dialogUseDetectedButton = null
         dialogAutoLocationSwitch = null
         dialogAutoLocationHelpText = null
+        dialogLocationPrayerSourceSpinner = null
+        dialogLocationPrayerSourceHelpText = null
         super.onDestroyView()
     }
 
@@ -2321,8 +2987,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         if (countryOption != null) {
             selectCountryOption(countryOption, cityApiValue = location.city)
         }
-        updateLocationCardSummary(location.city, location.country)
-        updateDialogLocationSummary(location.city, location.country)
+        val selectedSource = PrayerPreferences.getSelectedPrayerSource(requireContext())
+        updateLocationCardSummary(location.city, location.country, selectedSource)
+        updateDialogLocationSummary(location.city, location.country, selectedSource)
         if (autoSave) {
             persistDetectedLocation(location)
         } else {
@@ -2338,6 +3005,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val context = requireContext()
         val suggestedLocation = PrayerPreferences.suggestedLocation(context)
         val savedLocation = PrayerPreferences.loadSelectedLocation(context) ?: suggestedLocation
+        val prayerSources = prayerSourceOptions(context)
+        val selectedPrayerSource = PrayerPreferences.getSelectedPrayerSource(context)
+        val selectedPrayerSourceIndex = prayerSources.indexOfFirst { it.first == selectedPrayerSource }.takeIf { it >= 0 } ?: 0
         val dialogView = layoutInflater.inflate(R.layout.dialog_location_settings, null)
         val bindings = LocationDialogSupport.collectBindings(dialogView)
 
@@ -2348,12 +3018,23 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         dialogUseDetectedButton = bindings.useDetectedButton
         dialogAutoLocationSwitch = bindings.autoLocationSwitch
         dialogAutoLocationHelpText = bindings.autoLocationHelpText
+        dialogLocationPrayerSourceSpinner = dialogView.findViewById(R.id.location_prayer_source_spinner)
+        dialogLocationPrayerSourceHelpText = dialogView.findViewById(R.id.location_prayer_source_help_text)
 
         dialogCountryOptions = ManualLocationCatalog.countries()
         suppressLocationSpinnerCallbacks = true
         val isAutoLocation = PrayerPreferences.isAutoLocationEnabled(context)
 
         suppressLocationDialogAutoSave = true
+        dialogLocationPrayerSourceSpinner?.adapter = ArrayAdapter(
+            context,
+            android.R.layout.simple_spinner_item,
+            prayerSources.map { it.second },
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        dialogLocationPrayerSourceSpinner?.setSelection(selectedPrayerSourceIndex, false)
+        updatePrayerSourceHelp(dialogLocationPrayerSourceHelpText, selectedPrayerSource)
         LocationDialogSupport.bindInitialState(
             context = context,
             bindings = bindings,
@@ -2361,7 +3042,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             isAutoLocation = isAutoLocation,
             countryOptions = dialogCountryOptions,
             bindCountrySpinner = { location -> bindCountrySpinner(location) },
-            updateDialogLocationSummary = { city, country -> updateDialogLocationSummary(city, country) },
+            updateDialogLocationSummary = { city, country -> updateDialogLocationSummary(city, country, selectedPrayerSource) },
             updateLocationModeBadge = { enabled -> updateLocationModeBadge(enabled) },
             updateLocationDialogModeUi = { enabled -> updateLocationDialogModeUi(enabled) },
         )
@@ -2372,7 +3053,16 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             runCatching {
                 if (suppressLocationDialogAutoSave || view == null) return
                 val autoEnabled = dialogAutoLocationSwitch?.isChecked == true
+                val chosenSource = prayerSources.getOrElse(
+                    dialogLocationPrayerSourceSpinner?.selectedItemPosition ?: 0,
+                ) { prayerSources.first() }.first
+                val sourceChanged = chosenSource != PrayerPreferences.getSelectedPrayerSource(context)
                 updateLocationModeBadge(autoEnabled)
+                updatePrayerSourceHelp(dialogLocationPrayerSourceHelpText, chosenSource)
+                if (sourceChanged) {
+                    PrayerPreferences.setSelectedPrayerSource(context, chosenSource)
+                    updatePrayerSourceSummary(chosenSource)
+                }
 
                 if (!autoEnabled) {
                     val selected = LocationDialogSupport.manualSelectionOrFallback(
@@ -2392,9 +3082,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                         currentPrayerTimes = PrayerPreferences.loadSelectedPrayerTimes(context),
                         scheduleReminderSet = { times -> (activity as? MainActivity)?.scheduleReminderSet(times) ?: Unit },
                     )
-                    updateLocationCardSummary(city.label, country.label)
-                    updateDialogLocationSummary(city.label, country.label)
-                    if (manualLocationChanged) {
+                    updateLocationCardSummary(city.label, country.label, chosenSource)
+                    updateDialogLocationSummary(city.label, country.label, chosenSource)
+                    if (manualLocationChanged || sourceChanged) {
                         PrayerPreferences.clearSelectedPrayerTimes(context)
                         fetchAndPersistLocation(location, isAutoDetected = false)
                     }
@@ -2447,6 +3137,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                 )
                 if (selected != null) {
                     val (country, city) = selected
+                    val chosenSource = prayerSources.getOrElse(
+                        dialogLocationPrayerSourceSpinner?.selectedItemPosition ?: 0,
+                    ) { prayerSources.first() }.first
                     persistLocationSelection(
                         context = context,
                         selection = LocationSettingsSelection(
@@ -2456,12 +3149,33 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                         currentPrayerTimes = PrayerPreferences.loadSelectedPrayerTimes(context),
                         scheduleReminderSet = { times -> (activity as? MainActivity)?.scheduleReminderSet(times) ?: Unit },
                     )
-                    updateLocationCardSummary(city.label, country.label)
-                    updateDialogLocationSummary(city.label, country.label)
+                    updateLocationCardSummary(city.label, country.label, chosenSource)
+                    updateDialogLocationSummary(city.label, country.label, chosenSource)
                 }
             }
             updateReminderSummaries()
             finalizeSetupIfReady()
+        }
+
+        dialogLocationPrayerSourceSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val chosenSource = prayerSources.getOrElse(position) { prayerSources.first() }.first
+                updatePrayerSourceHelp(dialogLocationPrayerSourceHelpText, chosenSource)
+                val preview = if (bindings.autoLocationSwitch.isChecked) {
+                    PrayerPreferences.loadSelectedLocation(context) ?: suggestedLocation
+                } else {
+                    LocationDialogSupport.manualSelectionOrFallback(
+                        countryOptions = dialogCountryOptions,
+                        cityOptions = dialogCityOptions,
+                        bindings = bindings,
+                        fallbackLocation = suggestedLocation,
+                    )?.let { (country, city) -> AppLocation(city.label, country.label) }
+                        ?: (PrayerPreferences.loadSelectedLocation(context) ?: suggestedLocation)
+                }
+                updateDialogLocationSummary(preview.city, preview.country, chosenSource)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
 
         LocationDialogSupport.attachManualSelectionListeners(
@@ -2472,7 +3186,12 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             isSuppressed = { suppressLocationSpinnerCallbacks },
             setSuppressed = { value -> suppressLocationSpinnerCallbacks = value },
             bindCitySpinner = { country, city -> bindCitySpinner(country, preselectedCity = city) },
-            updateDialogLocationSummary = { city, country -> updateDialogLocationSummary(city, country) },
+            updateDialogLocationSummary = { city, country ->
+                val chosenSource = prayerSources.getOrElse(
+                    dialogLocationPrayerSourceSpinner?.selectedItemPosition ?: 0,
+                ) { prayerSources.first() }.first
+                updateDialogLocationSummary(city, country, chosenSource)
+            },
         )
 
         locationDialog = DialogSupport.createOkDialog(
@@ -2495,6 +3214,8 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                     dialogCountryOptions = emptyList()
                     dialogCityOptions = emptyList()
                     dialogAutoLocationHelpText = null
+                    dialogLocationPrayerSourceSpinner = null
+                    dialogLocationPrayerSourceHelpText = null
                     suppressLocationSpinnerCallbacks = false
                     locationDialog = null
                 }
@@ -2578,16 +3299,25 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
 
     private fun showSoundSettingsDialog() {
         val context = requireContext()
-        val azanSounds = supportedAzanSounds(context)
+        val azanSounds = azanSoundOptions(context)
         val selectedAzanRawName = PrayerPreferences.getSelectedAzanRawName(context)
         val dialogView = layoutInflater.inflate(R.layout.dialog_sound_settings, null)
         val soundSummary = dialogView.findViewById<TextView>(R.id.sound_dialog_summary)
+        val soundSelected = dialogView.findViewById<TextView>(R.id.sound_dialog_selected)
         val azanSoundSpinner = dialogView.findViewById<Spinner>(R.id.azan_sound_spinner)
         val testAzanButton = dialogView.findViewById<ImageButton>(R.id.test_azan_button)
         val stopAzanButton = dialogView.findViewById<ImageButton>(R.id.stop_azan_button)
+        val addCustomAzanButton = dialogView.findViewById<Button>(R.id.add_custom_azan_button)
+        val removeCustomAzanButton = dialogView.findViewById<Button>(R.id.remove_custom_azan_button)
         val selectedAzanIndex = selectedAzanIndex(selectedAzanRawName, azanSounds)
         bindLabelSpinner(context, azanSoundSpinner, azanSounds.map { it.label }, selectedAzanIndex)
-        soundSummary.text = getString(R.string.settings_sound_selected, azanSounds.getOrElse(selectedAzanIndex) { azanSounds.first() }.label)
+        soundSummary.text = getString(R.string.settings_sound_help)
+        soundSelected.text = getString(
+            R.string.settings_sound_selected,
+            azanSounds.getOrElse(selectedAzanIndex) { azanSounds.first() }.label,
+        )
+        removeCustomAzanButton.visibility =
+            if (PrayerPreferences.getCustomAzanUri(context).isNullOrBlank()) View.GONE else View.VISIBLE
 
         azanSoundSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, selectedView: View?, position: Int, id: Long) {
@@ -2595,7 +3325,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                     val chosen = azanSounds.getOrElse(position) { azanSounds.first() }
                     if (chosen.rawName == PrayerPreferences.getSelectedAzanRawName(context)) return
                     persistSelectedAzan(context, chosen.rawName)
-                    soundSummary.text = getString(R.string.settings_sound_selected, chosen.label)
+                    soundSelected.text = getString(R.string.settings_sound_selected, chosen.label)
                     updateSoundSettingsSummary(chosen.rawName, azanSounds)
                 }.onFailure { throwable ->
                     Log.e("TimerFragment", "Sound selection failed", throwable)
@@ -2613,6 +3343,20 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         }
         stopAzanButton.setOnClickListener {
             stopAzanTest(context)
+        }
+        addCustomAzanButton.setOnClickListener {
+            customAzanPickerLauncher.launch(arrayOf("audio/*"))
+        }
+        removeCustomAzanButton.setOnClickListener {
+            PrayerPreferences.clearCustomAzan(context)
+            updateSoundSettingsSummary(
+                PrayerPreferences.getSelectedAzanRawName(context),
+                azanSoundOptions(context),
+            )
+            Toast.makeText(context, getString(R.string.azan_sound_removed), Toast.LENGTH_SHORT).show()
+            soundDialog?.dismiss()
+            soundDialog = null
+            showSoundSettingsDialog()
         }
 
         soundDialog = DialogSupport.createOkDialog(
@@ -2635,10 +3379,22 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_profile_settings, null)
         val userNameInput = dialogView.findViewById<EditText>(R.id.settings_user_name_input)
         val genderSpinner = dialogView.findViewById<Spinner>(R.id.settings_user_gender_spinner)
+        val languageButton = dialogView.findViewById<Button>(R.id.settings_user_language_button)
+        val fontSpinner = dialogView.findViewById<Spinner>(R.id.settings_user_font_spinner)
+        val themeSpinner = dialogView.findViewById<Spinner>(R.id.settings_user_theme_spinner)
+        val elderSwitch = dialogView.findViewById<SwitchCompat>(R.id.settings_user_elder_switch)
         val birthDaySpinner = dialogView.findViewById<Spinner>(R.id.settings_birth_day_spinner)
         val birthMonthSpinner = dialogView.findViewById<Spinner>(R.id.settings_birth_month_spinner)
         val birthYearSpinner = dialogView.findViewById<Spinner>(R.id.settings_birth_year_spinner)
         userNameInput.setText(PrayerPreferences.getUserName(context))
+        val languages = supportedLanguages(context)
+        val currentLanguage = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+            .ifBlank { Locale.getDefault().language }
+            .split(",")
+            .first()
+            .substringBefore("-")
+        val selectedLanguageIndex = languages.indexOfFirst { it.code == currentLanguage }.takeIf { it >= 0 } ?: 0
+        languageButton.text = languages.getOrElse(selectedLanguageIndex) { languages.first() }.code.uppercase(Locale.getDefault())
 
         val genderOptions = genderOptions(context)
         bindLabelSpinner(
@@ -2661,6 +3417,39 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             yearOptions,
             PrayerPreferences.getBirthYear(context)?.let { yearValues.indexOf(it).takeIf { index -> index >= 0 }?.plus(1) } ?: 0,
         )
+        val fontOptions = fontSizeOptions(context)
+        val themeOptions = listOf(
+            com.muslimtime.app.data.AppearancePreferences.THEME_SYSTEM to getString(R.string.settings_theme_system),
+            com.muslimtime.app.data.AppearancePreferences.THEME_LIGHT to getString(R.string.settings_theme_light),
+            com.muslimtime.app.data.AppearancePreferences.THEME_DARK to getString(R.string.settings_theme_dark),
+        )
+        bindLabelSpinner(
+            context,
+            fontSpinner,
+            fontOptions.map { it.second },
+            pairOptionIndex(fontOptions, PrayerPreferences.getAppFontSize(context)),
+        )
+        bindLabelSpinner(
+            context,
+            themeSpinner,
+            themeOptions.map { it.second },
+            pairOptionIndex(themeOptions, PrayerPreferences.getThemeMode(context)),
+        )
+        elderSwitch.isChecked = PrayerPreferences.isElderModeEnabled(context)
+
+        languageButton.setOnClickListener {
+            val labels = languages.map { "${it.code.uppercase(Locale.getDefault())} - ${it.label}" }.toTypedArray()
+            AlertDialog.Builder(context)
+                .setTitle(getString(R.string.language_label))
+                .setItems(labels) { _, which ->
+                    val chosen = languages[which]
+                    languageButton.text = chosen.code.uppercase(Locale.getDefault())
+                    if (chosen.code != currentLanguage) {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(chosen.code))
+                    }
+                }
+                .show()
+        }
 
         profileDialog = DialogSupport.createDialog(
             context = context,
@@ -2681,7 +3470,23 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                                 ?.let { yearValues.getOrNull(it - 1) },
                         ),
                     )
+                    val appearanceSelection = AppearanceSettingsSelection(
+                        fontSize = selectedPairValueOr(fontSpinner, fontOptions, fontOptions.first().first),
+                        elderModeEnabled = elderSwitch.isChecked,
+                        themeMode = selectedPairValueOr(themeSpinner, themeOptions, themeOptions.first().first),
+                    )
+                    val appearanceChanged = persistAppearanceSettings(context, appearanceSelection)
+                    if (appearanceChanged) {
+                        val nightMode = when (appearanceSelection.themeMode) {
+                            com.muslimtime.app.data.AppearancePreferences.THEME_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+                            com.muslimtime.app.data.AppearancePreferences.THEME_DARK -> AppCompatDelegate.MODE_NIGHT_YES
+                            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                        }
+                        AppCompatDelegate.setDefaultNightMode(nightMode)
+                        view?.let { root -> applySharedUiPreferences(root, context) }
+                    }
                     updateProfileSettingsSummary()
+                    updateAppearanceSettingsSummary()
                     finalizeSetupIfReady()
                 }.onFailure { throwable ->
                     Log.e("TimerFragment", "Profile save failed", throwable)
@@ -2791,12 +3596,12 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         target?.text = getString(prayerSourceHelpRes(source))
     }
 
-    private fun updateLocationCardSummary(city: String, country: String) {
-        locationSummaryView?.text = locationSummaryText(city, country)
+    private fun updateLocationCardSummary(city: String, country: String, source: String) {
+        locationSummaryView?.text = locationSummaryText(requireContext(), city, country, source)
     }
 
-    private fun updateDialogLocationSummary(city: String, country: String) {
-        dialogLocationSummaryView?.text = locationSummaryText(city, country)
+    private fun updateDialogLocationSummary(city: String, country: String, source: String) {
+        dialogLocationSummaryView?.text = locationSummaryText(requireContext(), city, country, source)
     }
 
     private fun updatePrayerSourceSummary(source: String) {
@@ -2807,9 +3612,26 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         soundSettingsSummaryView?.text = soundSettingsSummaryText(requireContext(), selectedRawName, azanSounds)
     }
 
+    private fun resolveAudioDisplayName(uri: Uri): String {
+        val context = context ?: return ""
+        return runCatching {
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex >= 0 && cursor.moveToFirst()) {
+                    cursor.getString(nameIndex).orEmpty()
+                } else {
+                    ""
+                }
+            }.orEmpty()
+        }.getOrDefault("")
+    }
+
     private fun updateProfileSettingsSummary() {
         val context = context ?: return
         profileSettingsSummaryView?.text = profileSettingsSummaryText(context)
+        profileQuickActionTextView?.text = PrayerPreferences.personalizedAddress(context).ifBlank {
+            getString(R.string.settings_profile_section)
+        }
     }
 
     private fun updateAppearanceSettingsSummary() {
@@ -2846,8 +3668,11 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         dialogCityOptions = country.cities
         val selectedCity = bindCitySpinner(context, dialogCityInput, dialogCityOptions, preselectedCity)
         if (selectedCity != null) {
-            updateLocationCardSummary(selectedCity.label, country.label)
-            updateDialogLocationSummary(selectedCity.label, country.label)
+            val selectedSource = prayerSourceOptions(context).getOrElse(
+                dialogLocationPrayerSourceSpinner?.selectedItemPosition ?: 0,
+            ) { prayerSourceOptions(context).first() }.first
+            updateLocationCardSummary(selectedCity.label, country.label, selectedSource)
+            updateDialogLocationSummary(selectedCity.label, country.label, selectedSource)
         }
     }
 
@@ -2866,8 +3691,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
 
     private fun fetchAndPersistLocation(location: AppLocation, isAutoDetected: Boolean) {
         val fragmentContext = context ?: return
-        updateLocationCardSummary(location.city, location.country)
-        updateDialogLocationSummary(location.city, location.country)
+        val selectedSource = PrayerPreferences.getSelectedPrayerSource(fragmentContext)
+        updateLocationCardSummary(location.city, location.country, selectedSource)
+        updateDialogLocationSummary(location.city, location.country, selectedSource)
         fetchAndPersistPrayerLocation(
             context = fragmentContext,
             location = location,
@@ -3036,6 +3862,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             val statusBlock = collectReminderStatusLines(context, masterEnabled, enabledStates)
                 .joinToString("\n\n")
             val diagnosticsBlock = reminderDiagnosticsBlock(context)
+            val telemetryBlock = reminderTelemetryBlock(context)
             val historyBlock = reminderHistoryBlock(context)
             val notificationIntent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -3050,7 +3877,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             } else null
             val dialogView = layoutInflater.inflate(R.layout.dialog_reminder_status, null)
             dialogView.findViewById<TextView>(R.id.status_dialog_content)?.text =
-                statusBlock + "\n\n" + diagnosticsBlock + "\n\n" + historyBlock
+                statusBlock + "\n\n" + telemetryBlock + "\n\n" + diagnosticsBlock + "\n\n" + historyBlock
             dialogView.findViewById<Button>(R.id.status_open_notifications)?.setOnClickListener {
                 runCatching { startActivity(notificationIntent) }
             }
@@ -3089,11 +3916,11 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             view = dialogView,
             preReminderOptions = preReminderOptions(context),
             reminderTypeOptions = reminderTypeOptions(context),
-            repeatOptions = repeatReminderOptions(context),
             bindLabelSpinner = { spinner, labels, index -> bindLabelSpinner(context, spinner, labels, index) },
             pairOptionIndexInt = { options, value -> pairOptionIndex(options, value) },
             pairOptionIndexString = { options, value -> pairOptionIndex(options, value) },
         )
+        NotificationSettingsDialogSupport.updatePrayerSectionTitle(context, boundState.bindings)
 
         suppressNotificationDialogAutoSave = true
 
@@ -3124,10 +3951,20 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         NotificationSettingsDialogSupport.attachAutoSaveListeners(
             bindings = boundState.bindings,
             persist = { persistReminderPreferences() },
-            selectionListenerFactory = { callback -> simpleSelectionListener { callback() } },
+            selectionListenerFactory = { callback ->
+                simpleSelectionListener {
+                    NotificationSettingsDialogSupport.updatePrayerSectionTitle(context, boundState.bindings)
+                    callback()
+                }
+            },
         )
         suppressNotificationDialogAutoSave = false
-        NotificationSettingsDialogSupport.attachTestActions(context, boundState.bindings, boundState.options)
+        val showInternalTestButtons = com.muslimtime.app.BuildConfig.DEBUG
+        boundState.bindings.testReminderButton.visibility = if (showInternalTestButtons) View.VISIBLE else View.GONE
+        boundState.bindings.testPreReminderButton.visibility = if (showInternalTestButtons) View.VISIBLE else View.GONE
+        if (showInternalTestButtons) {
+            NotificationSettingsDialogSupport.attachTestActions(context, boundState.bindings, boundState.options)
+        }
         DialogSupport.createOkDialog(
             context = context,
             titleRes = R.string.settings_reminder_section,
@@ -3160,6 +3997,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             getString(R.string.about_text),
             getString(R.string.about_version, versionName),
             getString(R.string.about_founder),
+            getString(R.string.about_feedback_hint),
         ).joinToString("\n\n")
         AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.about_title))
@@ -3167,13 +4005,117 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             .setPositiveButton(getString(R.string.advanced_title)) { _, _ ->
                 showReminderStatusDialog()
             }
-            .setNeutralButton(getString(R.string.privacy_title)) { _, _ ->
+            .setNeutralButton(getString(R.string.feedback_share_button)) { _, _ ->
+                showFeedbackDialog(versionName)
+            }
+            .setNegativeButton(getString(R.string.privacy_title)) { _, _ ->
                 showPrivacyDialog()
             }
-            .setNegativeButton(getString(R.string.legacy_title)) { _, _ ->
-                showLegacyDialog()
+            .show()
+    }
+
+    private fun showFeedbackDialog(versionName: String) {
+        val context = requireContext()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_feedback, null)
+        val contactInput = dialogView.findViewById<EditText>(R.id.feedback_contact_input)
+        val messageInput = dialogView.findViewById<EditText>(R.id.feedback_message_input)
+        val userName = PrayerPreferences.getUserName(context)
+        if (userName.isNotBlank()) {
+            contactInput.setText(userName)
+        }
+        AlertDialog.Builder(context)
+            .setTitle(getString(R.string.feedback_title))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.feedback_send_button), null)
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+            .also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
+                        val contact = contactInput.text?.toString().orEmpty().trim()
+                        val message = messageInput.text?.toString().orEmpty().trim()
+                        if (message.isBlank()) {
+                            messageInput.error = getString(R.string.feedback_message_required)
+                            return@setOnClickListener
+                        }
+                        submitFeedback(versionName, contact, message, dialog)
+                    }
+                }
             }
             .show()
+    }
+
+    private fun submitFeedback(
+        versionName: String,
+        contact: String,
+        message: String,
+        dialog: AlertDialog,
+    ) {
+        val context = requireContext()
+        val baseUrl = BuildConfig.TELEMETRY_BASE_URL.trim().trimEnd('/')
+        if (baseUrl.isBlank()) {
+            Toast.makeText(context, getString(R.string.feedback_send_failed), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val device = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
+        val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+            .apply { timeZone = java.util.TimeZone.getDefault() }
+            .format(java.util.Date())
+        thread {
+            val result = runCatching {
+                val connection = (URL("$baseUrl/feedback").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5_000
+                    readTimeout = 5_000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                }
+                val payload = """
+                    {
+                      "appId":"${jsonEscape(BuildConfig.APPLICATION_ID)}",
+                      "versionName":"${jsonEscape(versionName)}",
+                      "versionCode":"${BuildConfig.VERSION_CODE}",
+                      "device":"${jsonEscape(device)}",
+                      "android":"${jsonEscape(android.os.Build.VERSION.RELEASE ?: "")}",
+                      "contact":"${jsonEscape(contact)}",
+                      "message":"${jsonEscape(message)}",
+                      "timestamp":"${jsonEscape(timestamp)}"
+                    }
+                """.trimIndent()
+                connection.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
+                val responseCode = connection.responseCode
+                val responseBody = runCatching {
+                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+                    stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                }.getOrDefault("")
+                connection.disconnect()
+                if (responseCode !in 200..299) {
+                    error("HTTP $responseCode ${responseBody.take(120)}".trim())
+                }
+            }
+            activity?.runOnUiThread {
+                if (!isAdded) return@runOnUiThread
+                result.onSuccess {
+                    dialog.dismiss()
+                    Toast.makeText(context, getString(R.string.feedback_send_success), Toast.LENGTH_SHORT).show()
+                }.onFailure {
+                    Toast.makeText(context, getString(R.string.feedback_send_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun jsonEscape(value: String): String = buildString {
+        value.forEach { ch ->
+            when (ch) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> append(ch)
+            }
+        }
     }
 
     private fun nextReminderStatusText(masterEnabled: Boolean, enabledStates: List<Boolean>): String {

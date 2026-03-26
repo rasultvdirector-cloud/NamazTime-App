@@ -45,7 +45,9 @@ object PrayerDataSyncManager {
                 PrayerTimesRepository.resolvedSource(context, it.country) == PrayerPreferences.PRAYER_SOURCE_ALADHAN
             } == true
 
-    fun shouldUsePeriodicWorker(context: Context): Boolean = false
+    fun shouldUsePeriodicWorker(context: Context): Boolean =
+        PrayerPreferences.hasCompletedInitialSetup(context) &&
+            PrayerPreferences.loadSelectedLocation(context) != null
 
     fun isTodaySynced(context: Context): Boolean =
         PrayerPreferences.loadSelectedLocation(context)?.let {
