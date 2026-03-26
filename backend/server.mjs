@@ -104,8 +104,12 @@ function feedbackHandler(req, res) {
     try {
       const parsed = JSON.parse(raw || "{}");
       appendFileSync(feedbackLogPath, `${JSON.stringify(parsed)}\n`, "utf8");
+      const compactMessage = String(parsed.message || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 500);
       console.log(
-        `[feedback] ${parsed.timestamp || "-"} version=${parsed.versionName || "-"} device=${parsed.device || "-"} contact=${parsed.contact || "-"}`
+        `[feedback] ${parsed.timestamp || "-"} version=${parsed.versionName || "-"} device=${parsed.device || "-"} contact=${parsed.contact || "-"} message=${compactMessage || "-"}`
       );
       sendJson(res, 200, { ok: true });
     } catch {
