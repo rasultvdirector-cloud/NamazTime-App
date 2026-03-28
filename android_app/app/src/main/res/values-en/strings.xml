@@ -63,7 +63,6 @@
     <string name="qibla_loading">Calculating qibla direction...</string>
     <string name="qibla_permission_needed">Location permission is required for qibla.</string>
     <string name="qibla_location_needed">Phone location was not found for qibla. Refresh location in Settings.</string>
-    <string name="qibla_direction_template">Qibla direction: %1$d°\nTurn the arrow to this direction.</string>
     <string name="qibla_sensor_missing">Compass sensor is not available on this device.</string>
     <string name="dua_today_label">Dua for today</string>
     <string name="dua_ramadan_day_label">Day %1$d of Ramadan</string>
@@ -109,8 +108,6 @@
     <string name="settings_use_current_location">Use current phone location</string>
     <string name="settings_auto_location_label">Update location automatically</string>
     <string name="settings_elder_mode_help">Applies larger text and clearer interface elements.</string>
-    <string name="settings_reminders_master_label">Enable prayer reminders</string>
-    <string name="settings_reminder_prayers_label">Prayers that should play adhan and reminders</string>
     <string name="azan_sound_label">Adhan sound</string>
     <string name="azan_sound_option_1">Adhan 1</string>
     <string name="azan_sound_option_2">Adhan 2</string>

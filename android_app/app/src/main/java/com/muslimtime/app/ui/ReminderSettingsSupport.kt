@@ -9,10 +9,10 @@ internal data class ReminderSettingsSelection(
     val masterEnabled: Boolean,
     val jumaaEnabled: Boolean,
     val preReminderMinutes: Int,
-    val reminderType: String,
     val repeatMinutes: Int,
     val showImsakIftarAllMonths: Boolean,
-    val enabledStates: List<Boolean>,
+    val prayerModes: List<String>,
+    val notificationStates: List<Boolean>,
 )
 
 internal fun persistReminderSettings(
@@ -24,10 +24,16 @@ internal fun persistReminderSettings(
     PrayerPreferences.setRemindersGloballyEnabled(context, selection.masterEnabled)
     PrayerPreferences.setJumaaNotificationsEnabled(context, selection.jumaaEnabled)
     PrayerPreferences.setPreReminderMinutes(context, selection.preReminderMinutes)
-    PrayerPreferences.setReminderType(context, selection.reminderType)
     PrayerPreferences.setRepeatReminderMinutes(context, selection.repeatMinutes)
     PrayerPreferences.setShowImsakIftarOutsideRamadan(context, selection.showImsakIftarAllMonths)
-    selection.enabledStates.forEachIndexed { index, enabled ->
+    selection.prayerModes.forEachIndexed { index, mode ->
+        PrayerPreferences.setPrayerReminderMode(context, index, mode)
+    }
+    selection.notificationStates.forEachIndexed { index, enabled ->
+        PrayerPreferences.setPrayerNotificationEnabled(context, index, enabled)
+    }
+    selection.prayerModes.indices.forEach { index ->
+        val enabled = selection.prayerModes[index] != PrayerPreferences.REMINDER_MODE_OFF || selection.notificationStates.getOrElse(index) { false }
         PrayerPreferences.setReminderEnabled(context, index, enabled)
     }
     PrayerPreferences.setNotificationSetupCompleted(context, true)

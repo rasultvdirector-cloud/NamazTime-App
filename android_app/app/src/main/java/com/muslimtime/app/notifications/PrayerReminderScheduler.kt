@@ -14,6 +14,7 @@ object PrayerReminderScheduler {
     private val mainRequestCodes = listOf(7, 8, 9, 10, 11, 12)
     private val preRequestCodes = listOf(107, 108, 109, 110, 111, 112)
     private val repeatRequestCodes = listOf(207, 208, 209, 210, 211, 212)
+    private val delayedNotificationRequestCodes = listOf(307, 308, 309, 310, 311, 312)
     private const val MAX_REPEAT_COUNT = 3
 
     fun scheduleReminderSet(context: Context, prayerTimes: CityPrayerTimes) {
@@ -38,6 +39,7 @@ object PrayerReminderScheduler {
         cancelReminder(context, mainRequestCodes[prayerIndex])
         cancelReminder(context, preRequestCodes[prayerIndex])
         cancelReminder(context, repeatRequestCodes[prayerIndex])
+        cancelReminder(context, delayedNotificationRequestCodes[prayerIndex])
 
         val prayerTime = prayerTimes.times[prayerIndex]
         schedulePrayer(context, prayerTime.name, prayerIndex, prayerTime.time, forceTomorrow)
@@ -70,7 +72,29 @@ object PrayerReminderScheduler {
     }
 
     fun cancelAll(context: Context) {
-        (mainRequestCodes + preRequestCodes + repeatRequestCodes).forEach { cancelReminder(context, it) }
+        (mainRequestCodes + preRequestCodes + repeatRequestCodes + delayedNotificationRequestCodes).forEach {
+            cancelReminder(context, it)
+        }
+    }
+
+    fun scheduleDelayedNotification(
+        context: Context,
+        prayerName: String,
+        prayerId: Int,
+        delayMillis: Long,
+    ) {
+        val prayerIndex = prayerIndexFromAnyId(prayerId)
+        if (prayerIndex == -1) return
+        val requestCode = delayedNotificationRequestCodes[prayerIndex]
+        cancelReminder(context, requestCode)
+        val intent = buildReceiverIntent(
+            context = context,
+            prayerName = prayerName,
+            prayerId = prayerId,
+            requestCode = requestCode,
+            kind = PrayerReminderReceiver.KIND_DELAYED_NOTIFICATION,
+        )
+        scheduleExactAt(context, requestCode, intent, System.currentTimeMillis() + delayMillis)
     }
 
     private fun schedulePrayer(
@@ -188,10 +212,11 @@ object PrayerReminderScheduler {
 
     private fun prayerIndexFromMainId(prayerId: Int): Int = mainRequestCodes.indexOf(prayerId)
 
-    private fun prayerIndexFromAnyId(prayerId: Int): Int {
+    fun prayerIndexFromAnyId(prayerId: Int): Int {
         return prayerIndexFromMainId(prayerId).takeIf { it != -1 }
             ?: preRequestCodes.indexOf(prayerId).takeIf { it != -1 }
-            ?: repeatRequestCodes.indexOf(prayerId)
+            ?: repeatRequestCodes.indexOf(prayerId).takeIf { it != -1 }
+            ?: delayedNotificationRequestCodes.indexOf(prayerId)
     }
 
     private fun cancelReminder(context: Context, reqCode: Int) {

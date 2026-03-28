@@ -62,7 +62,6 @@
     <string name="qibla_loading">Kıble yönü hesaplanıyor...</string>
     <string name="qibla_permission_needed">Kıble için konum izni gerekiyor.</string>
     <string name="qibla_location_needed">Kıble için telefonun konumu bulunamadı. Ayarlardan konumu yenileyin.</string>
-    <string name="qibla_direction_template">Kıble yönü: %1$d°\nOku bu yöne çevirin.</string>
     <string name="qibla_sensor_missing">Bu cihazda pusula sensörü bulunamadı.</string>
     <string name="dua_today_label">Bugünün duası</string>
     <string name="dua_ramadan_day_label">Ramazanın %1$d. günü</string>
@@ -108,8 +107,6 @@
     <string name="settings_use_current_location">Telefonun mevcut konumunu kullan</string>
     <string name="settings_auto_location_label">Konumu otomatik güncelle</string>
     <string name="settings_elder_mode_help">Daha büyük yazılar ve daha net arayüz öğeleri uygulanır.</string>
-    <string name="settings_reminders_master_label">Namaz hatırlatmaları aktif olsun</string>
-    <string name="settings_reminder_prayers_label">Ezan ve hatırlatma gelecek namazlar</string>
     <string name="azan_sound_label">Ezan sesi</string>
     <string name="azan_sound_option_1">Ezan 1</string>
     <string name="azan_sound_option_2">Ezan 2</string>

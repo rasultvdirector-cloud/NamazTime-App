@@ -27,10 +27,12 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.media.RingtoneManager
 import android.provider.Settings
 import android.provider.OpenableColumns
 import android.util.TypedValue
 import android.util.Log
+import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -202,8 +204,9 @@ class MainActivity : AppCompatActivity() {
         window.statusBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
         window.navigationBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.isAppearanceLightStatusBars = true
-        controller.isAppearanceLightNavigationBars = true
+        val isNightMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        controller.isAppearanceLightStatusBars = !isNightMode
+        controller.isAppearanceLightNavigationBars = !isNightMode
     }
 
     private fun applySystemBarInsets() {
@@ -635,11 +638,15 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
     }
 
     private fun formatPrayerNameForCountdown(prayerName: String): String {
+        return prayerName
+    }
+
+    private fun formatPrayerNameForObjectCase(prayerName: String): String {
         return when {
             prayerName.endsWith(" namazı", ignoreCase = true) ->
-                prayerName.removeSuffix(" namazı") + " namazına"
+                prayerName.removeSuffix(" namazı") + " namazını"
             prayerName.endsWith(" namazi", ignoreCase = true) ->
-                prayerName.removeSuffix(" namazi") + " namazina"
+                prayerName.removeSuffix(" namazi") + " namazini"
             else -> prayerName
         }
     }
@@ -655,18 +662,19 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
         val blessing = pickPersonalPrayerBlessing(now)
 
         findFirstPendingPrayer(prayerTimes, now)?.let { prayerName ->
+            val pendingPrayerText = formatPrayerNameForObjectCase(prayerName)
             val message = if (address.isNotBlank()) {
                 getString(
                     R.string.prayer_personal_pending_with_name,
                     address,
-                    prayerName,
+                    pendingPrayerText,
                     nextPrayerName,
                     nextPrayerCountdown,
                 )
             } else {
                 getString(
                     R.string.prayer_personal_pending_no_name,
-                    prayerName,
+                    pendingPrayerText,
                     nextPrayerName,
                     nextPrayerCountdown,
                 )
@@ -676,11 +684,12 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
 
         findLatestDonePrayerEntry(now.timeInMillis)?.let { entry ->
             val elapsedText = formatRelativeElapsed(now.timeInMillis - entry.timestamp)
+            val donePrayerText = formatPrayerNameForObjectCase(entry.prayerName)
             val message = if (address.isNotBlank()) {
                 getString(
                     R.string.prayer_personal_done_with_name,
                     address,
-                    entry.prayerName,
+                    donePrayerText,
                     elapsedText,
                     nextPrayerName,
                     nextPrayerCountdown,
@@ -688,7 +697,7 @@ class PrayerFragment : Fragment(R.layout.fragment_prayer) {
             } else {
                 getString(
                     R.string.prayer_personal_done_no_name,
-                    entry.prayerName,
+                    donePrayerText,
                     elapsedText,
                     nextPrayerName,
                     nextPrayerCountdown,
@@ -1659,12 +1668,12 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                     downloadButton.backgroundTintList = null
                     downloadButton.background = AppCompatResources.getDrawable(
                         requireContext(),
-                        if (offlineStatus.isDownloaded) R.drawable.bg_quran_delete_button else R.drawable.bg_widget_action,
+                        if (offlineStatus.isDownloaded) R.drawable.bg_quran_delete_button else R.drawable.bg_quran_download_button,
                     )
                     downloadButton.setTextColor(
                         ContextCompat.getColor(
                             requireContext(),
-                            if (offlineStatus.isDownloaded) R.color.white else R.color.text_primary,
+                            if (offlineStatus.isDownloaded) R.color.white else R.color.white,
                         ),
                     )
                     downloadButton.setOnClickListener {
@@ -2496,15 +2505,19 @@ class DuaFragment : Fragment(R.layout.fragment_dua), SensorEventListener {
         smoothedAzimuth = stabilizedAzimuth
         val ringRotation = stabilizedAzimuth - bearing
         val difference = angularDifference(stabilizedAzimuth, bearing)
+        val signedDelta = signedAngularDelta(stabilizedAzimuth, bearing)
         qiblaArrow?.rotation = 0f
         qiblaRotatingLayer?.rotation = ringRotation
         qiblaMapRouteLayer?.rotation = bearing
         qiblaDegreeValue?.text = getString(R.string.qibla_degree_value_template, bearing.roundToInt())
         qiblaStatus?.text =
             if (difference <= 5f) {
-                getString(R.string.qibla_aligned_template, bearing.roundToInt())
+                getString(R.string.qibla_aligned_direction_template, bearing.roundToInt())
             } else {
-                getString(R.string.qibla_direction_template, bearing.roundToInt(), difference.roundToInt())
+                getString(
+                    if (signedDelta >= 0f) R.string.qibla_direction_right_template else R.string.qibla_direction_left_template,
+                    difference.roundToInt(),
+                )
             }
         qiblaPreciseHint?.text =
             if (difference <= 5f) {
@@ -2578,7 +2591,7 @@ class DuaFragment : Fragment(R.layout.fragment_dua), SensorEventListener {
         currentQiblaBearing = bearing
         qiblaMapRouteLayer?.rotation = bearing
         qiblaDegreeValue?.text = getString(R.string.qibla_degree_value_template, bearing.roundToInt())
-        qiblaStatus?.text = getString(R.string.qibla_direction_template, bearing.roundToInt(), 0)
+        qiblaStatus?.text = getString(R.string.qibla_direction_initial_template, bearing.roundToInt())
         qiblaPreciseHint?.text = getString(R.string.qibla_location_accuracy_template, location.accuracy.roundToInt())
         qiblaMapDistance?.text = getString(R.string.qibla_distance_template, calculateKaabaDistanceKm(location))
         setQiblaAccuracyStatus(if (isAligned) QiblaAccuracyState.ALIGNED else QiblaAccuracyState.SEARCHING)
@@ -2742,6 +2755,10 @@ class DuaFragment : Fragment(R.layout.fragment_dua), SensorEventListener {
         return if (diff > 180f) 360f - diff else diff
     }
 
+    private fun signedAngularDelta(current: Float, target: Float): Float {
+        return (((target - current + 540f) % 360f) - 180f)
+    }
+
     private fun smoothAngle(previous: Float?, current: Float): Float {
         if (previous == null) return current
         val delta = (((current - previous + 540f) % 360f) - 180f)
@@ -2815,6 +2832,26 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         }.onFailure {
             Toast.makeText(context, getString(R.string.azan_sound_add_failed), Toast.LENGTH_SHORT).show()
         }
+    }
+    private val signalTonePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val context = context ?: return@registerForActivityResult
+        if (result.resultCode != AppCompatActivity.RESULT_OK) return@registerForActivityResult
+        val pickedUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        }
+        val label = pickedUri?.let { RingtoneManager.getRingtone(context, it)?.getTitle(context) }
+            ?: getString(R.string.signal_tone_default)
+        persistSelectedTone(context, pickedUri, label)
+        updateSoundSettingsSummary(PrayerPreferences.getSelectedAzanRawName(context), azanSoundOptions(context))
+        soundDialog?.dismiss()
+        soundDialog = null
+        showSoundSettingsDialog()
+        Toast.makeText(context, getString(R.string.signal_tone_selected, label), Toast.LENGTH_SHORT).show()
     }
     private var suppressLocationDialogAutoSave = false
     private var suppressPrayerSourceDialogAutoSave = false
@@ -3301,13 +3338,17 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val context = requireContext()
         val azanSounds = azanSoundOptions(context)
         val selectedAzanRawName = PrayerPreferences.getSelectedAzanRawName(context)
+        val selectedToneLabel = resolveSelectedToneLabel(context)
         val dialogView = layoutInflater.inflate(R.layout.dialog_sound_settings, null)
         val soundSummary = dialogView.findViewById<TextView>(R.id.sound_dialog_summary)
         val soundSelected = dialogView.findViewById<TextView>(R.id.sound_dialog_selected)
+        val toneSelected = dialogView.findViewById<TextView>(R.id.sound_dialog_tone_selected)
         val azanSoundSpinner = dialogView.findViewById<Spinner>(R.id.azan_sound_spinner)
         val testAzanButton = dialogView.findViewById<ImageButton>(R.id.test_azan_button)
         val stopAzanButton = dialogView.findViewById<ImageButton>(R.id.stop_azan_button)
         val addCustomAzanButton = dialogView.findViewById<Button>(R.id.add_custom_azan_button)
+        val chooseToneButton = dialogView.findViewById<Button>(R.id.choose_tone_button)
+        val testToneButton = dialogView.findViewById<Button>(R.id.test_tone_button)
         val removeCustomAzanButton = dialogView.findViewById<Button>(R.id.remove_custom_azan_button)
         val selectedAzanIndex = selectedAzanIndex(selectedAzanRawName, azanSounds)
         bindLabelSpinner(context, azanSoundSpinner, azanSounds.map { it.label }, selectedAzanIndex)
@@ -3316,6 +3357,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             R.string.settings_sound_selected,
             azanSounds.getOrElse(selectedAzanIndex) { azanSounds.first() }.label,
         )
+        toneSelected.text = getString(R.string.settings_tone_selected, selectedToneLabel)
         removeCustomAzanButton.visibility =
             if (PrayerPreferences.getCustomAzanUri(context).isNullOrBlank()) View.GONE else View.VISIBLE
 
@@ -3338,14 +3380,31 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             val selectedRawName = azanSounds.getOrElse(azanSoundSpinner.selectedItemPosition) { azanSounds.first() }.rawName
             persistSelectedAzan(context, selectedRawName)
             updateSoundSettingsSummary(selectedRawName, azanSounds)
+            stopToneTest()
             startAzanTest(context)
             Toast.makeText(context, getString(R.string.azan_test_started), Toast.LENGTH_SHORT).show()
         }
         stopAzanButton.setOnClickListener {
             stopAzanTest(context)
+            stopToneTest()
+        }
+        testToneButton.setOnClickListener {
+            stopAzanTest(context)
+            startToneTest(context)
         }
         addCustomAzanButton.setOnClickListener {
             customAzanPickerLauncher.launch(arrayOf("audio/*"))
+        }
+        chooseToneButton.setOnClickListener {
+            val pickerIntent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.signal_tone_picker_title))
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                putExtra(RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, resolveSelectedToneUri(context))
+            }
+            signalTonePickerLauncher.launch(pickerIntent)
         }
         removeCustomAzanButton.setOnClickListener {
             PrayerPreferences.clearCustomAzan(context)
@@ -3368,6 +3427,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                 finalizeSetupIfReady()
             },
             onDismiss = {
+                stopToneTest()
                 soundDialog = null
             },
         )
@@ -3915,12 +3975,9 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             context = context,
             view = dialogView,
             preReminderOptions = preReminderOptions(context),
-            reminderTypeOptions = reminderTypeOptions(context),
             bindLabelSpinner = { spinner, labels, index -> bindLabelSpinner(context, spinner, labels, index) },
             pairOptionIndexInt = { options, value -> pairOptionIndex(options, value) },
-            pairOptionIndexString = { options, value -> pairOptionIndex(options, value) },
         )
-        NotificationSettingsDialogSupport.updatePrayerSectionTitle(context, boundState.bindings)
 
         suppressNotificationDialogAutoSave = true
 
@@ -3932,7 +3989,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
                     bindings = boundState.bindings,
                     options = boundState.options,
                     selectedIntValue = { spinner, options, fallback -> selectedPairValueOr(spinner, options, fallback) },
-                    selectedStringValue = { spinner, options, fallback -> selectedPairValueOr(spinner, options, fallback) },
                 )
                 NotificationSettingsDialogSupport.persistSelection(
                     context = context,
@@ -3951,12 +4007,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         NotificationSettingsDialogSupport.attachAutoSaveListeners(
             bindings = boundState.bindings,
             persist = { persistReminderPreferences() },
-            selectionListenerFactory = { callback ->
-                simpleSelectionListener {
-                    NotificationSettingsDialogSupport.updatePrayerSectionTitle(context, boundState.bindings)
-                    callback()
-                }
-            },
+            selectionListenerFactory = { callback -> simpleSelectionListener { callback() } },
         )
         suppressNotificationDialogAutoSave = false
         val showInternalTestButtons = com.muslimtime.app.BuildConfig.DEBUG
@@ -3999,19 +4050,38 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
             getString(R.string.about_founder),
             getString(R.string.about_feedback_hint),
         ).joinToString("\n\n")
-        AlertDialog.Builder(requireContext())
+        val dialogView = layoutInflater.inflate(R.layout.dialog_about_info, null)
+        val messageView = dialogView.findViewById<TextView>(R.id.about_dialog_message)
+        val feedbackButton = dialogView.findViewById<Button>(R.id.about_feedback_button)
+        val advancedButton = dialogView.findViewById<Button>(R.id.about_advanced_button)
+        val privacyButton = dialogView.findViewById<Button>(R.id.about_privacy_button)
+        val legacyButton = dialogView.findViewById<Button>(R.id.about_legacy_button)
+        messageView.text = message
+
+        val dialog = AlertDialog.Builder(requireContext())
             .setTitle(getString(R.string.about_title))
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.advanced_title)) { _, _ ->
-                showReminderStatusDialog()
-            }
-            .setNeutralButton(getString(R.string.feedback_share_button)) { _, _ ->
-                showFeedbackDialog(versionName)
-            }
-            .setNegativeButton(getString(R.string.privacy_title)) { _, _ ->
-                showPrivacyDialog()
-            }
-            .show()
+            .setView(dialogView)
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+
+        feedbackButton.setOnClickListener {
+            dialog.dismiss()
+            showFeedbackDialog(versionName)
+        }
+        advancedButton.setOnClickListener {
+            dialog.dismiss()
+            showReminderStatusDialog()
+        }
+        privacyButton.setOnClickListener {
+            dialog.dismiss()
+            showPrivacyDialog()
+        }
+        legacyButton.setOnClickListener {
+            dialog.dismiss()
+            showLegacyDialog()
+        }
+
+        dialog.show()
     }
 
     private fun showFeedbackDialog(versionName: String) {

@@ -88,7 +88,8 @@ internal fun soundSettingsSummaryText(
         }
         ?: azanSounds.firstOrNull()?.label
         ?: ""
-    return context.getString(R.string.settings_sound_selected, selectedLabel)
+    val toneLabel = resolveSelectedToneLabel(context)
+    return context.getString(R.string.settings_sound_selected_summary, selectedLabel, toneLabel)
 }
 
 internal fun profileSettingsSummaryText(context: Context): String {
@@ -137,22 +138,27 @@ internal fun reminderSummaryText(
     masterEnabled: Boolean,
     enabledStates: List<Boolean>,
 ): String {
-    val enabledNames = PrayerPreferences.localizedPrayerNames(context).filterIndexed { index, _ ->
-        enabledStates.getOrElse(index) { false }
+    val enabledNames = PrayerPreferences.localizedPrayerNames(context).mapIndexedNotNull { index, name ->
+        if (!enabledStates.getOrElse(index) { false }) return@mapIndexedNotNull null
+        val mode = PrayerPreferences.getPrayerReminderMode(context, index)
+        val notification = PrayerPreferences.isPrayerNotificationEnabled(context, index)
+        val labels = buildList {
+            if (mode == PrayerPreferences.REMINDER_MODE_AZAN) add(context.getString(R.string.settings_prayer_action_azan_short))
+            if (mode == PrayerPreferences.REMINDER_MODE_SIGNAL) add(context.getString(R.string.settings_prayer_action_signal_short))
+            if (notification) add(context.getString(R.string.settings_prayer_action_notification_short))
+        }
+        if (labels.isEmpty()) {
+            null
+        } else {
+            "$name (${labels.joinToString(" + ")})"
+        }
     }
     return when {
         !masterEnabled -> context.getString(R.string.reminder_master_disabled)
         enabledNames.isEmpty() -> context.getString(R.string.reminder_selection_empty)
         else -> {
             val before = PrayerPreferences.getPreReminderMinutes(context)
-            val typeLabel = when (PrayerPreferences.getReminderType(context)) {
-                PrayerPreferences.REMINDER_TYPE_NOTIFICATION -> context.getString(R.string.settings_reminder_type_notification)
-                PrayerPreferences.REMINDER_TYPE_AZAN_ONLY -> context.getString(R.string.settings_reminder_type_azan_only)
-                else -> context.getString(R.string.settings_reminder_type_notification_azan)
-            }
             buildString {
-                append(typeLabel)
-                append("\n")
                 append(enabledNames.joinToString(", "))
                 if (before > 0) append(" • $before dəq əvvəl")
             }
@@ -246,12 +252,6 @@ internal fun preReminderOptions(context: Context): List<Pair<Int, String>> = lis
     5 to context.getString(R.string.settings_reminder_before_5),
     10 to context.getString(R.string.settings_reminder_before_10),
     15 to context.getString(R.string.settings_reminder_before_15),
-)
-
-internal fun reminderTypeOptions(context: Context): List<Pair<String, String>> = listOf(
-    PrayerPreferences.REMINDER_TYPE_NOTIFICATION to context.getString(R.string.settings_reminder_type_notification),
-    PrayerPreferences.REMINDER_TYPE_NOTIFICATION_AZAN to context.getString(R.string.settings_reminder_type_notification_azan),
-    PrayerPreferences.REMINDER_TYPE_AZAN_ONLY to context.getString(R.string.settings_reminder_type_azan_only),
 )
 
 internal fun repeatReminderOptions(context: Context): List<Pair<Int, String>> = listOf(

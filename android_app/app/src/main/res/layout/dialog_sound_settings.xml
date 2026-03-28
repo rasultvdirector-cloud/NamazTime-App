@@ -71,6 +71,29 @@
         android:text="@string/azan_sound_add_custom" />
 
     <TextView
+        android:id="@+id/sound_dialog_tone_selected"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/settings_tone_selected_placeholder"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/choose_tone_button"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/signal_tone_choose_button" />
+
+    <Button
+        android:id="@+id/test_tone_button"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/test_tone_button" />
+
+    <TextView
         android:id="@+id/add_custom_azan_help"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

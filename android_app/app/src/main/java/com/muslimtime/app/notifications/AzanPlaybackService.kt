@@ -25,7 +25,7 @@ class AzanPlaybackService : Service() {
                 ReminderDiagnosticsStore.record(this, "azan_stop_requested", "service stop action")
                 stopPlayback()
             }
-            else -> startPlayback()
+            else -> startPlayback(intent)
         }
         return START_NOT_STICKY
     }
@@ -37,28 +37,24 @@ class AzanPlaybackService : Service() {
         super.onDestroy()
     }
 
-    private fun startPlayback() {
+    private fun startPlayback(intent: Intent?) {
         runCatching {
-            val selectedRawName = PrayerPreferences.getSelectedAzanRawName(this)
-            val playbackUri = if (selectedRawName == PrayerPreferences.CUSTOM_AZAN_RAW_NAME) {
-                PrayerPreferences.getCustomAzanUri(this)?.let(Uri::parse)
+            val playbackMode = intentPlaybackMode(intent)
+            val selectedRawName = if (playbackMode == ReminderAudioSupport.PLAYBACK_MODE_SIGNAL) {
+                "system_notification"
             } else {
-                val rawId = resources.getIdentifier(selectedRawName, "raw", packageName)
-                if (rawId == 0) {
-                    null
-                } else {
-                    Uri.parse("android.resource://$packageName/$rawId")
-                }
+                PrayerPreferences.getSelectedAzanRawName(this)
             }
+            val playbackUri = ReminderAudioSupport.resolvePlaybackUri(this, playbackMode)
             if (playbackUri == null) {
-                ReminderDiagnosticsStore.record(this, "azan_raw_missing", "rawName=$selectedRawName")
+                ReminderDiagnosticsStore.record(this, "azan_raw_missing", "mode=$playbackMode rawName=$selectedRawName")
                 stopSelf()
                 return
             }
 
             createChannelIfNeeded()
             startForeground(NOTIFICATION_ID, buildForegroundNotification())
-            ReminderDiagnosticsStore.record(this, "azan_service_foreground", "source=$selectedRawName")
+            ReminderDiagnosticsStore.record(this, "azan_service_foreground", "mode=$playbackMode source=$selectedRawName")
 
             if (mediaPlayer == null) {
                 mediaPlayer = MediaPlayer().apply {
@@ -81,7 +77,7 @@ class AzanPlaybackService : Service() {
             mediaPlayer?.let { player ->
                 if (!player.isPlaying) {
                     player.start()
-                    ReminderDiagnosticsStore.record(this, "azan_playback_started", "source=$selectedRawName")
+                    ReminderDiagnosticsStore.record(this, "azan_playback_started", "mode=$playbackMode source=$selectedRawName")
                 }
             } ?: run {
                 ReminderDiagnosticsStore.record(this, "azan_player_missing", "MediaPlayer was null")
@@ -134,5 +130,15 @@ class AzanPlaybackService : Service() {
         private const val NOTIFICATION_ID = 4401
         const val ACTION_START = "com.muslimtime.app.ACTION_START_AZAN"
         const val ACTION_STOP = "com.muslimtime.app.ACTION_STOP_AZAN"
+        const val EXTRA_PLAYBACK_MODE = "extra_playback_mode"
+    }
+
+    private fun intentPlaybackMode(intent: Intent?): String {
+        val mode = intent?.getStringExtra(EXTRA_PLAYBACK_MODE)
+        return if (mode == ReminderAudioSupport.PLAYBACK_MODE_SIGNAL) {
+            ReminderAudioSupport.PLAYBACK_MODE_SIGNAL
+        } else {
+            ReminderAudioSupport.PLAYBACK_MODE_AZAN
+        }
     }
 }

@@ -62,7 +62,6 @@
     <string name="qibla_loading">Вычисляется направление киблы...</string>
     <string name="qibla_permission_needed">Для киблы нужно разрешение на геолокацию.</string>
     <string name="qibla_location_needed">Для киблы не удалось определить местоположение телефона. Обновите его в Настройках.</string>
-    <string name="qibla_direction_template">Направление киблы: %1$d°\nПоверните стрелку в эту сторону.</string>
     <string name="qibla_sensor_missing">На этом устройстве нет компасного сенсора.</string>
     <string name="dua_today_label">Дуа на сегодня</string>
     <string name="dua_ramadan_day_label">%1$d-й день Рамадана</string>
@@ -108,8 +107,6 @@
     <string name="settings_use_current_location">Использовать текущее место телефона</string>
     <string name="settings_auto_location_label">Обновлять место автоматически</string>
     <string name="settings_elder_mode_help">Применяются более крупный текст и более понятные элементы интерфейса.</string>
-    <string name="settings_reminders_master_label">Включить напоминания о намазе</string>
-    <string name="settings_reminder_prayers_label">Намазы для азана и напоминаний</string>
     <string name="azan_sound_label">Звук азана</string>
     <string name="azan_sound_option_1">Азан 1</string>
     <string name="azan_sound_option_2">Азан 2</string>

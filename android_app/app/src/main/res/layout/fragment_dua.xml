@@ -104,9 +104,79 @@
 
                 <FrameLayout
                     android:id="@+id/qibla_compass_container"
-                    android:layout_width="@dimen/qibla_compass_size"
-                    android:layout_height="@dimen/qibla_compass_size"
+                    android:layout_width="@dimen/qibla_compass_outer_size"
+                    android:layout_height="@dimen/qibla_compass_outer_size"
                     android:layout_marginTop="10dp">
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_outer_size"
+                        android:layout_height="@dimen/qibla_compass_outer_size"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_qibla_compass_outer_ring" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_major_length"
+                        android:layout_gravity="top|center_horizontal"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_qibla_compass_tick" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_minor_length"
+                        android:layout_gravity="top|end"
+                        android:layout_marginTop="26dp"
+                        android:layout_marginEnd="40dp"
+                        android:background="@drawable/bg_qibla_compass_tick"
+                        android:rotation="45" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_major_length"
+                        android:layout_height="@dimen/qibla_compass_tick_width"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_qibla_compass_tick" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_minor_length"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginBottom="26dp"
+                        android:layout_marginEnd="40dp"
+                        android:background="@drawable/bg_qibla_compass_tick"
+                        android:rotation="135" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_major_length"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:background="@drawable/bg_qibla_compass_tick" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_minor_length"
+                        android:layout_gravity="bottom|start"
+                        android:layout_marginBottom="26dp"
+                        android:layout_marginStart="40dp"
+                        android:background="@drawable/bg_qibla_compass_tick"
+                        android:rotation="45" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_major_length"
+                        android:layout_height="@dimen/qibla_compass_tick_width"
+                        android:layout_gravity="center_vertical|start"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_qibla_compass_tick" />
+
+                    <View
+                        android:layout_width="@dimen/qibla_compass_tick_width"
+                        android:layout_height="@dimen/qibla_compass_tick_minor_length"
+                        android:layout_gravity="top|start"
+                        android:layout_marginTop="26dp"
+                        android:layout_marginStart="40dp"
+                        android:background="@drawable/bg_qibla_compass_tick"
+                        android:rotation="135" />
 
                     <View
                         android:id="@+id/qibla_alignment_halo"
@@ -120,7 +190,8 @@
                     <FrameLayout
                         android:id="@+id/qibla_rotating_layer"
                         android:layout_width="@dimen/qibla_compass_size"
-                        android:layout_height="@dimen/qibla_compass_size">
+                        android:layout_height="@dimen/qibla_compass_size"
+                        android:layout_gravity="center">
 
                         <ImageView
                             android:id="@+id/qibla_ring"
@@ -150,12 +221,48 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="34dp"
+                            android:layout_marginEnd="28dp"
+                            android:text="45°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical|end"
                             android:layout_marginEnd="18dp"
                             android:text="E"
                             android:textColor="@color/text_primary"
                             android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="80dp"
+                            android:layout_marginEnd="6dp"
+                            android:text="90°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|end"
+                            android:layout_marginBottom="34dp"
+                            android:layout_marginEnd="28dp"
+                            android:text="135°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -170,12 +277,69 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|center_horizontal"
+                            android:layout_marginBottom="10dp"
+                            android:text="180°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|start"
+                            android:layout_marginBottom="34dp"
+                            android:layout_marginStart="28dp"
+                            android:text="225°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical|start"
                             android:layout_marginStart="18dp"
                             android:text="W"
                             android:textColor="@color/text_primary"
                             android:textSize="@dimen/qibla_ring_label_text"
                             android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical|start"
+                            android:layout_marginStart="6dp"
+                            android:text="270°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|start"
+                            android:layout_marginTop="34dp"
+                            android:layout_marginStart="28dp"
+                            android:text="315°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|center_horizontal"
+                            android:layout_marginTop="12dp"
+                            android:text="0°"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="@dimen/qibla_ring_degree_text"
+                            android:textStyle="bold"
+                            android:alpha="0.9" />
                     </FrameLayout>
 
                     <ImageView

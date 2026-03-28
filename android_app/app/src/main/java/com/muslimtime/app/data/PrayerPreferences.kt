@@ -40,6 +40,8 @@ object PrayerPreferences {
     private const val KEY_AZAN_SOUND = "azan_sound"
     private const val KEY_AZAN_CUSTOM_URI = "azan_custom_uri"
     private const val KEY_AZAN_CUSTOM_LABEL = "azan_custom_label"
+    private const val KEY_SIGNAL_TONE_URI = "signal_tone_uri"
+    private const val KEY_SIGNAL_TONE_LABEL = "signal_tone_label"
     private const val KEY_PRAYER_SOURCE = "prayer_source"
     private const val KEY_LOCATION_MODE = "location_mode"
     private const val KEY_LAST_SYNC_DATE = "last_sync_date"
@@ -70,6 +72,9 @@ object PrayerPreferences {
     const val REMINDER_TYPE_NOTIFICATION_AZAN = "notification_azan"
     const val REMINDER_TYPE_AZAN_ONLY = "azan_only"
     const val REMINDER_TYPE_FULLSCREEN_SIMPLE = "fullscreen_simple"
+    const val REMINDER_MODE_OFF = "off"
+    const val REMINDER_MODE_AZAN = "azan"
+    const val REMINDER_MODE_SIGNAL = "signal"
     const val CUSTOM_AZAN_RAW_NAME = "custom_uri"
     const val USER_GENDER_UNSPECIFIED = "unspecified"
     const val USER_GENDER_FEMALE = "female"
@@ -216,6 +221,18 @@ object PrayerPreferences {
 
     fun setReminderType(context: Context, type: String) = ReminderPreferences.setReminderType(context, type)
 
+    fun getPrayerReminderMode(context: Context, index: Int): String =
+        ReminderPreferences.getPrayerReminderMode(context, index)
+
+    fun setPrayerReminderMode(context: Context, index: Int, mode: String) =
+        ReminderPreferences.setPrayerReminderMode(context, index, mode)
+
+    fun isPrayerNotificationEnabled(context: Context, index: Int): Boolean =
+        ReminderPreferences.isPrayerNotificationEnabled(context, index)
+
+    fun setPrayerNotificationEnabled(context: Context, index: Int, enabled: Boolean) =
+        ReminderPreferences.setPrayerNotificationEnabled(context, index, enabled)
+
     fun hasCompletedInitialSetup(context: Context): Boolean = SetupPreferences.hasCompletedInitialSetup(context)
 
     fun isInitialSetupSatisfied(context: Context): Boolean = SetupPreferences.isInitialSetupSatisfied(context)
@@ -258,6 +275,24 @@ object PrayerPreferences {
         if (getSelectedAzanRawName(context) == CUSTOM_AZAN_RAW_NAME) {
             setSelectedAzanRawName(context, "azan_short_1")
         }
+    }
+
+    fun getSelectedSignalToneUri(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_SIGNAL_TONE_URI, null)
+    }
+
+    fun getSelectedSignalToneLabel(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_SIGNAL_TONE_LABEL, null)
+    }
+
+    fun setSelectedSignalTone(context: Context, uri: String?, label: String?) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString(KEY_SIGNAL_TONE_URI, uri)
+            .putString(KEY_SIGNAL_TONE_LABEL, label)
+            .apply()
     }
 
     fun getSelectedPrayerSource(context: Context): String = PrayerSourcePreferences.getSelectedPrayerSource(context)

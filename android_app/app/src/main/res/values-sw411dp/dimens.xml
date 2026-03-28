@@ -65,9 +65,14 @@
     <dimen name="qibla_mode_padding_vertical">10dp</dimen>
     <dimen name="qibla_mode_min_width">92dp</dimen>
     <dimen name="qibla_compass_size">220dp</dimen>
+    <dimen name="qibla_compass_outer_size">236dp</dimen>
     <dimen name="qibla_halo_size">156dp</dimen>
     <dimen name="qibla_marker_size">44dp</dimen>
     <dimen name="qibla_ring_label_text">12sp</dimen>
+    <dimen name="qibla_ring_degree_text">10sp</dimen>
+    <dimen name="qibla_compass_tick_major_length">16dp</dimen>
+    <dimen name="qibla_compass_tick_minor_length">9dp</dimen>
+    <dimen name="qibla_compass_tick_width">2dp</dimen>
     <dimen name="qibla_arrow_size">120dp</dimen>
     <dimen name="qibla_map_route_width">4dp</dimen>
     <dimen name="qibla_map_route_height">86dp</dimen>

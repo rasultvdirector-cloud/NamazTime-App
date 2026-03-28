@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.icu.util.IslamicCalendar
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
@@ -16,7 +17,6 @@ import com.muslimtime.app.data.ReminderDiagnosticsStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.data.dailyDuaContent
 import com.muslimtime.app.ui.MainActivity
-import com.muslimtime.app.ui.PrayerReminderActivity
 
 class PrayerReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,6 +35,13 @@ class PrayerReminderReceiver : BroadcastReceiver() {
 
         when (kind) {
             KIND_PRE -> showPreReminder(context, prayerName, prayerId, requestCode, leadMinutes)
+            KIND_DELAYED_NOTIFICATION -> showMainNotification(
+                context,
+                prayerName,
+                prayerId,
+                requestCode,
+                isRepeat = false,
+            )
             KIND_REPEAT -> showMainReminder(
                 context,
                 prayerName,
@@ -107,6 +114,15 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         notificationOnly: Boolean,
     ) {
         val reminderMessage = buildReminderMessage(context, prayerName, prayerId, isRepeat)
+        val prayerIndex = PrayerReminderScheduler.prayerIndexFromAnyId(prayerId)
+        val reminderMode = if (prayerIndex != -1) {
+            PrayerPreferences.getPrayerReminderMode(context, prayerIndex)
+        } else {
+            PrayerPreferences.REMINDER_MODE_OFF
+        }
+        val shouldShowNotification = notificationOnly || (
+            prayerIndex != -1 && PrayerPreferences.isPrayerNotificationEnabled(context, prayerIndex)
+        )
 
         if (prayerId != TEST_NOTIFICATION_ID) {
             PrayerCompletionStore.markPending(context, prayerId)
@@ -120,29 +136,30 @@ class PrayerReminderReceiver : BroadcastReceiver() {
             PrayerReminderScheduler.scheduleRepeatReminder(context, prayerName, prayerId, repeatCount + 1)
         }
 
-        val reminderType = if (notificationOnly) {
-            PrayerPreferences.REMINDER_TYPE_NOTIFICATION
-        } else {
-            PrayerPreferences.getReminderType(context)
+        val playbackMode = when {
+            notificationOnly -> null
+            reminderMode == PrayerPreferences.REMINDER_MODE_AZAN -> ReminderAudioSupport.PLAYBACK_MODE_AZAN
+            reminderMode == PrayerPreferences.REMINDER_MODE_SIGNAL -> ReminderAudioSupport.PLAYBACK_MODE_SIGNAL
+            else -> null
         }
-        val shouldShowNotification =
-            reminderType != PrayerPreferences.REMINDER_TYPE_AZAN_ONLY || notificationOnly
-        if (!notificationOnly && reminderType != PrayerPreferences.REMINDER_TYPE_NOTIFICATION) {
+
+        if (playbackMode != null) {
             ReminderDiagnosticsStore.record(
                 context,
                 "azan_start_attempt",
-                "prayer=$prayerName id=$prayerId type=$reminderType repeat=$isRepeat",
+                "prayer=$prayerName id=$prayerId mode=$playbackMode repeat=$isRepeat",
             )
             runCatching {
                 val serviceIntent = Intent(context, AzanPlaybackService::class.java).apply {
                     action = AzanPlaybackService.ACTION_START
+                    putExtra(AzanPlaybackService.EXTRA_PLAYBACK_MODE, playbackMode)
                 }
                 ContextCompat.startForegroundService(context, serviceIntent)
             }.onSuccess {
                 ReminderDiagnosticsStore.record(
                     context,
                     "azan_start_requested",
-                    "prayer=$prayerName id=$prayerId type=$reminderType",
+                    "prayer=$prayerName id=$prayerId mode=$playbackMode",
                 )
             }.onFailure { throwable ->
                 ReminderDiagnosticsStore.record(
@@ -155,88 +172,103 @@ class PrayerReminderReceiver : BroadcastReceiver() {
             ReminderDiagnosticsStore.record(
                 context,
                 "azan_skipped",
-                "prayer=$prayerName id=$prayerId type=$reminderType notificationOnly=$notificationOnly",
+                "prayer=$prayerName id=$prayerId mode=$reminderMode notificationOnly=$notificationOnly",
             )
         }
 
         if (shouldShowNotification) {
-            val manager = ensureChannel(
-                context = context,
-                channelId = MAIN_REMINDER_CHANNEL_ID,
-                name = context.getString(R.string.reminder_channel_name),
-                silent = true,
-            )
-
-            val fullScreenIntent = Intent(context, PrayerReminderActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                putExtra(PrayerReminderActivity.EXTRA_PRAYER, prayerName)
-                putExtra(PrayerReminderActivity.EXTRA_ID, prayerId)
-                putExtra(PrayerReminderActivity.EXTRA_TITLE, reminderMessage.title)
-                putExtra(PrayerReminderActivity.EXTRA_BODY, reminderMessage.body)
-                putExtra(
-                    PrayerReminderActivity.EXTRA_SIMPLE_MODE,
-                    reminderType == PrayerPreferences.REMINDER_TYPE_FULLSCREEN_SIMPLE || PrayerPreferences.isElderModeEnabled(context),
-                )
-            }
-            val launchIntent = if (reminderType == PrayerPreferences.REMINDER_TYPE_FULLSCREEN_SIMPLE) {
-                fullScreenIntent
-            } else {
-                Intent(context, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-            }
-            val launchPending = PendingIntent.getActivity(
-                context,
-                requestCode + 1000,
-                launchIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-
-            val stopIntent = Intent(context, PrayerActionReceiver::class.java).apply {
-                action = PrayerActionReceiver.ACTION_STOP_REMINDER
-                putExtra(PrayerActionReceiver.EXTRA_ID, prayerId)
-            }
-            val stopPending = PendingIntent.getBroadcast(
-                context,
-                requestCode + 3000,
-                stopIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-
-            val builder = NotificationCompat.Builder(context, MAIN_REMINDER_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_popup_reminder)
-                .setContentTitle(reminderMessage.title)
-                .setContentText(reminderMessage.body)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(reminderMessage.body))
-                .setContentIntent(launchPending)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSilent(true)
-                .addAction(0, context.getString(R.string.notification_action_stop), stopPending)
-
-            val notification = builder.build()
-            val notificationsGranted = hasNotificationPermission(context)
-            if (notificationsGranted) {
-                manager.notify(prayerId, notification)
+            if (playbackMode != null && prayerId != TEST_NOTIFICATION_ID) {
+                val delayMillis = ReminderAudioSupport.estimatePlaybackDurationMs(context, playbackMode) + 3_000L
+                PrayerReminderScheduler.scheduleDelayedNotification(context, prayerName, prayerId, delayMillis)
                 ReminderDiagnosticsStore.record(
                     context,
-                    "notification_shown",
-                    "prayer=$prayerName id=$prayerId type=$reminderType repeat=$isRepeat",
+                    "notification_delayed",
+                    "prayer=$prayerName id=$prayerId mode=$playbackMode delayMs=$delayMillis",
                 )
             } else {
-                ReminderDiagnosticsStore.record(
-                    context,
-                    "notification_blocked",
-                    "POST_NOTIFICATIONS missing for prayer=$prayerName id=$prayerId",
-                )
+                showReminderNotification(context, prayerName, prayerId, requestCode, reminderMessage, isRepeat)
             }
         } else {
             ReminderDiagnosticsStore.record(
                 context,
                 "notification_skipped",
-                "prayer=$prayerName id=$prayerId type=$reminderType",
+                "prayer=$prayerName id=$prayerId mode=$reminderMode",
+            )
+        }
+    }
+
+    private fun showMainNotification(
+        context: Context,
+        prayerName: String,
+        prayerId: Int,
+        requestCode: Int,
+        isRepeat: Boolean,
+    ) {
+        val reminderMessage = buildReminderMessage(context, prayerName, prayerId, isRepeat)
+        showReminderNotification(context, prayerName, prayerId, requestCode, reminderMessage, isRepeat)
+    }
+
+    private fun showReminderNotification(
+        context: Context,
+        prayerName: String,
+        prayerId: Int,
+        requestCode: Int,
+        reminderMessage: ReminderMessage,
+        isRepeat: Boolean,
+    ) {
+        val manager = ensureChannel(
+            context = context,
+            channelId = MAIN_REMINDER_CHANNEL_ID,
+            name = context.getString(R.string.reminder_channel_name),
+            silent = true,
+        )
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val launchPending = PendingIntent.getActivity(
+            context,
+            requestCode + 1000,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val stopIntent = Intent(context, PrayerActionReceiver::class.java).apply {
+            action = PrayerActionReceiver.ACTION_STOP_REMINDER
+            putExtra(PrayerActionReceiver.EXTRA_ID, prayerId)
+        }
+        val stopPending = PendingIntent.getBroadcast(
+            context,
+            requestCode + 3000,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(context, MAIN_REMINDER_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(reminderMessage.title)
+            .setContentText(reminderMessage.body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(reminderMessage.body))
+            .setContentIntent(launchPending)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSilent(true)
+            .addAction(0, context.getString(R.string.notification_action_stop), stopPending)
+            .build()
+
+        if (hasNotificationPermission(context)) {
+            manager.notify(prayerId, notification)
+            ReminderDiagnosticsStore.record(
+                context,
+                "notification_shown",
+                "prayer=$prayerName id=$prayerId repeat=$isRepeat",
+            )
+        } else {
+            ReminderDiagnosticsStore.record(
+                context,
+                "notification_blocked",
+                "POST_NOTIFICATIONS missing for prayer=$prayerName id=$prayerId",
             )
         }
     }
@@ -279,7 +311,8 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         id: Int,
         isRepeat: Boolean,
     ): ReminderMessage {
-        val isIftar = prayerName.contains(context.getString(R.string.prayer_name_maghrib_iftar), ignoreCase = true)
+        val isIftar = prayerName.contains(context.getString(R.string.prayer_name_maghrib_iftar), ignoreCase = true) &&
+            isRamadanToday()
         val prayerKey = prayerKey(context, prayerName)
         val title =
             when {
@@ -338,8 +371,15 @@ class PrayerReminderReceiver : BroadcastReceiver() {
                     )
                     "$base ${closing.trim()}".trim()
                 }
-            }
+        }
         return ReminderMessage(title = title, body = personalize(context, body))
+    }
+
+    private fun isRamadanToday(now: java.util.Calendar = java.util.Calendar.getInstance()): Boolean {
+        val hijriCalendar = IslamicCalendar().apply {
+            timeInMillis = now.timeInMillis
+        }
+        return hijriCalendar.get(IslamicCalendar.MONTH) == 8
     }
 
     private fun buildPreReminderMessage(
@@ -435,6 +475,7 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         const val KIND_PRE = "pre"
         const val KIND_MAIN = "main"
         const val KIND_REPEAT = "repeat"
+        const val KIND_DELAYED_NOTIFICATION = "delayed_notification"
         const val TEST_NOTIFICATION_ID = 9001
         private const val PRE_REMINDER_CHANNEL_ID = "prayer_pre_reminder_channel"
         private const val MAIN_REMINDER_CHANNEL_ID = "prayer_reminder_channel_silent"

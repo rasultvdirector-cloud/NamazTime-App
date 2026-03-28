@@ -12,53 +12,338 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_type_label"
+            android:text="@string/settings_reminder_prayer_actions_label"
             android:textStyle="bold" />
 
-        <Spinner
-            android:id="@+id/spinner_reminder_type_dialog"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" />
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_reminder_prayer_actions_help"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
 
-        <TextView
-            android:id="@+id/notification_prayer_section_title"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="36dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:text="@string/settings_prayer_action_notification"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="@string/settings_reminder_prayers_label_azan"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_fajr_dialog"
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_reminder_fajr_label"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_fajr_azan_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_reminder_mode_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_fajr_signal_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_reminder_mode_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_fajr_notification_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_reminder_square_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/settings_reminder_fajr_label" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_dhuhr_dialog"
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_reminder_dhuhr_label"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_dhuhr_azan_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_reminder_mode_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_dhuhr_signal_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_reminder_mode_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_dhuhr_notification_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_reminder_square_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_dhuhr_label" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_asr_dialog"
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_reminder_asr_label"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_asr_azan_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_reminder_mode_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_asr_signal_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_reminder_mode_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_asr_notification_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_reminder_square_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_asr_label" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_maghrib_dialog"
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_reminder_maghrib_label"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_maghrib_azan_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_reminder_mode_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_maghrib_signal_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_reminder_mode_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_maghrib_notification_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_reminder_square_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_maghrib_label" />
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/switch_isha_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_reminder_isha_label" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_reminder_isha_label"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_isha_azan_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_reminder_mode_active"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_azan"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_isha_signal_dialog"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_reminder_mode_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="72dp"
+                android:paddingHorizontal="14dp"
+                android:text="@string/settings_prayer_action_signal"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/switch_isha_notification_dialog"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_reminder_square_inactive"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
