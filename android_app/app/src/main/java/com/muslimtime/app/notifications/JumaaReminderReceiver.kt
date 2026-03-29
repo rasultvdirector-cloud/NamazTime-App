@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
 import com.muslimtime.app.data.AzerbaijaniDuaRepository
+import com.muslimtime.app.data.NotificationCenterStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.ui.MainActivity
 import kotlin.math.absoluteValue
@@ -76,6 +77,12 @@ class JumaaReminderReceiver : BroadcastReceiver() {
             .build()
 
         manager.notify(NOTIFICATION_ID, notification)
+        NotificationCenterStore.addGeneral(
+            context,
+            uniqueKey = "jumaa_${System.currentTimeMillis() / 60000L}",
+            title = context.getString(R.string.jumaa_title),
+            body = body,
+        )
     }
 
     companion object {

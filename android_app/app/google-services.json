@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083415843837",
+    "project_id": "namaztime-a749f",
+    "storage_bucket": "namaztime-a749f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083415843837:android:4a14f65278f7259cfebf94",
+        "android_client_info": {
+          "package_name": "com.muslimtime.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnxrpOG-ydGo5BNNeYN3AddbqR03gMyN8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

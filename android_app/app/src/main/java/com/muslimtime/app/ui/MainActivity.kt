@@ -80,6 +80,8 @@ import com.muslimtime.app.data.CityPrayerTimes
 import com.muslimtime.app.data.ManualCityOption
 import com.muslimtime.app.data.ManualCountryOption
 import com.muslimtime.app.data.ManualLocationCatalog
+import com.muslimtime.app.data.NotificationCenterItem
+import com.muslimtime.app.data.NotificationCenterStore
 import com.muslimtime.app.data.PrayerCompletionState
 import com.muslimtime.app.data.PrayerCompletionStore
 import com.muslimtime.app.data.PrayerDataSyncManager
@@ -99,6 +101,7 @@ import com.muslimtime.app.data.quranSuras
 import com.muslimtime.app.data.sampleDuas
 import com.muslimtime.app.data.supportedLanguages
 import com.muslimtime.app.notifications.AzanPlaybackService
+import com.muslimtime.app.notifications.AppPushManager
 import com.muslimtime.app.notifications.PrayerRefreshScheduler
 import com.muslimtime.app.notifications.PrayerReminderScheduler
 import com.muslimtime.app.notifications.QuranAudioPlaybackService
@@ -119,6 +122,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nav: BottomNavigationView
     private var setupMode = false
     private var permissionOnboardingRunning = false
+    private var isSyncingNavigation = false
+    private val notificationCenterReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            updateNotificationBadge()
+        }
+    }
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) {
@@ -151,35 +160,36 @@ class MainActivity : AppCompatActivity() {
 
         applySystemBarStyle()
         applySystemBarInsets()
+        AppPushManager.initialize(this)
 
         pager.adapter = DashboardPagerAdapter(this)
         pager.isUserInputEnabled = false
 
         nav.setOnItemSelectedListener { item ->
-            pager.currentItem = when (item.itemId) {
+            if (isSyncingNavigation) return@setOnItemSelectedListener true
+            val targetPage = when (item.itemId) {
                 R.id.nav_prayer -> 0
                 R.id.nav_quran -> 1
                 R.id.nav_dua -> 2
-                else -> 3
+                R.id.nav_notifications -> 3
+                else -> 4
+            }
+            if (pager.currentItem != targetPage) {
+                pager.currentItem = targetPage
             }
             true
         }
 
         pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                nav.selectedItemId = when (position) {
-                    0 -> R.id.nav_prayer
-                    1 -> R.id.nav_quran
-                    2 -> R.id.nav_dua
-                    else -> R.id.nav_timer
-                }
+                syncNavigationForPage(position)
             }
         })
 
         ensureDefaultAppSetupState()
         setupMode = false
         nav.visibility = View.VISIBLE
-        nav.selectedItemId = R.id.nav_prayer
+        syncNavigationForPage(0)
         PrayerRefreshScheduler.scheduleNextJumaaReminder(this)
         if (PrayerDataSyncManager.shouldUseDailyRefreshAlarm(this)) {
             PrayerRefreshScheduler.scheduleNextDailyRefresh(this)
@@ -194,10 +204,35 @@ class MainActivity : AppCompatActivity() {
             PrayerTimesRefreshWorker.enqueueImmediate(this)
         }
         if (PrayerPreferences.isAutoLocationEnabled(this)) {
-            (supportFragmentManager.findFragmentByTag("f3") as? TimerFragment)?.refreshAutoLocationIfEnabled()
+            (supportFragmentManager.findFragmentByTag("f4") as? TimerFragment)?.refreshAutoLocationIfEnabled()
         }
 
         maybeStartPermissionOnboarding()
+        processInboundAnnouncement(intent)
+        updateNotificationBadge()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        processInboundAnnouncement(intent)
+        updateNotificationBadge()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        ContextCompat.registerReceiver(
+            this,
+            notificationCenterReceiver,
+            IntentFilter(NotificationCenterStore.ACTION_UPDATED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        updateNotificationBadge()
+    }
+
+    override fun onStop() {
+        runCatching { unregisterReceiver(notificationCenterReceiver) }
+        super.onStop()
     }
 
     private fun applySystemBarStyle() {
@@ -343,34 +378,168 @@ class MainActivity : AppCompatActivity() {
         nav.visibility = if (enabled) View.GONE else View.VISIBLE
         pager.isUserInputEnabled = !enabled
         if (enabled) {
-            pager.currentItem = 3
-            nav.selectedItemId = R.id.nav_timer
+            pager.currentItem = 4
+            syncNavigationForPage(4)
         } else {
             if (navigateToPrayer) {
                 pager.currentItem = 0
-                nav.selectedItemId = R.id.nav_prayer
+                syncNavigationForPage(0)
             } else {
-                pager.currentItem = 3
-                nav.selectedItemId = R.id.nav_timer
+                pager.currentItem = 4
+                syncNavigationForPage(4)
             }
         }
     }
 
     fun openSettings() {
-        pager.currentItem = 3
-        nav.selectedItemId = R.id.nav_timer
+        pager.currentItem = 4
+        syncNavigationForPage(4)
+    }
+
+    private fun updateNotificationBadge() {
+        val unreadCount = NotificationCenterStore.unreadCount(this)
+        val badge = nav.getOrCreateBadge(R.id.nav_notifications)
+        if (unreadCount <= 0) {
+            badge.clearNumber()
+            badge.isVisible = false
+        } else {
+            badge.number = unreadCount.coerceAtMost(99)
+            badge.isVisible = true
+        }
+    }
+
+    private fun processInboundAnnouncement(intent: Intent?) {
+        val extras = intent?.extras ?: return
+        val title = extras.getString("gcm.notification.title")
+            ?: extras.getString("google.c.a.c_l")
+            ?: extras.getString("title")
+        val body = extras.getString("gcm.notification.body")
+            ?: extras.getString("body")
+            ?: extras.getString("alert")
+        if (title.isNullOrBlank() || body.isNullOrBlank()) return
+        val uniqueKey = extras.getString("google.message_id")
+            ?: extras.getString("message_id")
+            ?: "${System.currentTimeMillis() / 60000L}"
+        NotificationCenterStore.addAnnouncement(
+            this,
+            uniqueKey = uniqueKey,
+            title = title,
+            body = body,
+        )
+    }
+
+    private fun syncNavigationForPage(position: Int) {
+        val targetItemId = when (position) {
+            0 -> R.id.nav_prayer
+            1 -> R.id.nav_quran
+            2 -> R.id.nav_dua
+            3 -> R.id.nav_notifications
+            4 -> R.id.nav_settings
+            else -> View.NO_ID
+        }
+        if (targetItemId != View.NO_ID && nav.selectedItemId != targetItemId) {
+            isSyncingNavigation = true
+            nav.selectedItemId = targetItemId
+            isSyncingNavigation = false
+        }
     }
 
 }
 
 class DashboardPagerAdapter(activity: MainActivity) : androidx.viewpager2.adapter.FragmentStateAdapter(activity) {
-    override fun getItemCount(): Int = 4
+    override fun getItemCount(): Int = 5
 
     override fun createFragment(position: Int): Fragment = when (position) {
         0 -> PrayerFragment()
         1 -> QuranFragment()
         2 -> DuaFragment()
+        3 -> NotificationsFragment()
         else -> TimerFragment()
+    }
+}
+
+class NotificationsFragment : Fragment(R.layout.fragment_notifications) {
+    private var listView: ListView? = null
+    private var statusView: TextView? = null
+    private var emptyView: TextView? = null
+    private lateinit var adapter: BaseAdapter
+    private var items: List<NotificationCenterItem> = emptyList()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        applySharedUiPreferences(view, requireContext())
+        listView = view.findViewById(R.id.notifications_list)
+        statusView = view.findViewById(R.id.notifications_status)
+        emptyView = view.findViewById(R.id.notifications_empty)
+        val clearAllButton = view.findViewById<Button>(R.id.notifications_clear_all_button)
+        adapter = object : BaseAdapter() {
+            override fun getCount(): Int = items.size
+            override fun getItem(position: Int): Any = items[position]
+            override fun getItemId(position: Int): Long = position.toLong()
+
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val row = convertView ?: layoutInflater.inflate(R.layout.item_notification_center, parent, false)
+                val item = items[position]
+                val badge = row.findViewById<TextView>(R.id.notification_item_badge)
+                val time = row.findViewById<TextView>(R.id.notification_item_time)
+                val title = row.findViewById<TextView>(R.id.notification_item_title)
+                val body = row.findViewById<TextView>(R.id.notification_item_body)
+                val deleteButton = row.findViewById<ImageButton>(R.id.notification_item_delete)
+
+                badge.text = when (item.type) {
+                    "announcement" -> getString(R.string.notifications_center_type_announcement)
+                    "general" -> getString(R.string.notifications_center_type_general)
+                    else -> getString(R.string.notifications_center_type_prayer)
+                }
+                badge.background = AppCompatResources.getDrawable(
+                    requireContext(),
+                    if (item.isRead) R.drawable.bg_widget_status_neutral else R.drawable.bg_widget_status_active,
+                )
+                badge.setTextColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (item.isRead) R.color.text_secondary else android.R.color.white,
+                    ),
+                )
+                time.text = NotificationCenterStore.formatTimestamp(item.createdAt)
+                title.text = item.title
+                body.text = item.body
+                title.alpha = if (item.isRead) 0.78f else 1f
+                body.alpha = if (item.isRead) 0.78f else 1f
+                deleteButton.setOnClickListener {
+                    NotificationCenterStore.delete(requireContext(), item.id)
+                    refreshInbox(markRead = false)
+                }
+                return row
+            }
+        }
+        listView?.adapter = adapter
+        clearAllButton.setOnClickListener {
+            NotificationCenterStore.clearAll(requireContext())
+            refreshInbox(markRead = false)
+            Toast.makeText(requireContext(), getString(R.string.notifications_center_cleared), Toast.LENGTH_SHORT).show()
+        }
+        refreshInbox(markRead = true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshInbox(markRead = true)
+    }
+
+    private fun refreshInbox(markRead: Boolean) {
+        if (markRead) NotificationCenterStore.markAllRead(requireContext())
+        items = NotificationCenterStore.list(requireContext())
+        adapter.notifyDataSetChanged()
+        val unreadCount = items.count { !it.isRead }
+        statusView?.text = if (items.isEmpty()) {
+            getString(R.string.notifications_center_empty)
+        } else if (unreadCount > 0) {
+            getString(R.string.notifications_center_unread_count, unreadCount)
+        } else {
+            getString(R.string.notifications_center_total_count, items.size)
+        }
+        emptyView?.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+        listView?.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
     }
 }
 

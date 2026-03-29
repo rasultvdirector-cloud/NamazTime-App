@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
 import com.muslimtime.app.data.AzerbaijaniDuaRepository
+import com.muslimtime.app.data.NotificationCenterStore
 import com.muslimtime.app.data.PrayerCompletionStore
 import com.muslimtime.app.data.ReminderDiagnosticsStore
 import com.muslimtime.app.data.PrayerPreferences
@@ -101,6 +102,12 @@ class PrayerReminderReceiver : BroadcastReceiver() {
             .setContentIntent(launchPending)
             .build()
 
+        NotificationCenterStore.addPrayer(
+            context,
+            uniqueKey = "pre_${prayerId}_${System.currentTimeMillis() / 60000L}",
+            title = reminderMessage.title,
+            body = reminderMessage.body,
+        )
         notifyIfAllowed(context, manager, requestCode, notification)
     }
 
@@ -259,6 +266,12 @@ class PrayerReminderReceiver : BroadcastReceiver() {
 
         if (hasNotificationPermission(context)) {
             manager.notify(prayerId, notification)
+            NotificationCenterStore.addPrayer(
+                context,
+                uniqueKey = "main_${prayerId}_${System.currentTimeMillis() / 60000L}",
+                title = reminderMessage.title,
+                body = reminderMessage.body,
+            )
             ReminderDiagnosticsStore.record(
                 context,
                 "notification_shown",

@@ -17,6 +17,8 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
+val firebaseConfigFile = rootProject.file("app/google-services.json")
+val firebasePushEnabled = firebaseConfigFile.exists()
 val telemetryBaseUrl = (
     localProperties.getProperty("namaztime.telemetryBaseUrl")
         ?: System.getenv("NAMAZTIME_TELEMETRY_BASE_URL")
@@ -31,8 +33,9 @@ android {
         applicationId = "com.muslimtime.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 10
-        versionName = "2.0.0"
+        versionCode = 13
+        versionName = "2.0.3"
+        buildConfigField("boolean", "FIREBASE_PUSH_ENABLED", firebasePushEnabled.toString())
         buildConfigField("String", "TELEMETRY_BASE_URL", "\"$telemetryBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -93,6 +96,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    implementation("com.google.firebase:firebase-messaging")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -105,4 +110,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+if (firebasePushEnabled) {
+    apply(plugin = "com.google.gms.google-services")
 }

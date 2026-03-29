@@ -1,12 +1,27 @@
 <resources>
     <string name="app_name">NamazTime</string>
+    <string name="push_channel_general_name">NamazTime mesajları</string>
+    <string name="push_channel_general_description">Yeniliklər, vacib elanlar və tətbiq bildirişləri.</string>
+    <string name="push_default_title">NamazTime</string>
+    <string name="push_init_missing_config">Firebase push üçün google-services.json hələ əlavə olunmayıb.</string>
     <string name="nav_prayer">Namaz</string>
     <string name="nav_quran">Quran</string>
     <string name="nav_dua">Qibləgah</string>
     <string name="nav_qibla">Qibləgah</string>
+    <string name="nav_notifications">Bildirişlər</string>
     <string name="nav_reminder">Xatırlatma</string>
     <string name="nav_timer">Digər</string>
-    <string name="nav_settings">Tənzimləmələr</string>
+    <string name="nav_settings">Ayarlar</string>
+    <string name="notifications_center_intro">Namaz bildirişləri və app elanları burada saxlanılır.</string>
+    <string name="notifications_center_empty">Hələ saxlanılmış bildiriş yoxdur.</string>
+    <string name="notifications_center_clear_all">Hamısını sil</string>
+    <string name="notifications_center_delete_one">Bildirişi sil</string>
+    <string name="notifications_center_unread_count">%1$d yeni bildiriş</string>
+    <string name="notifications_center_total_count">%1$d bildiriş</string>
+    <string name="notifications_center_type_prayer">Namaz</string>
+    <string name="notifications_center_type_announcement">Elan</string>
+    <string name="notifications_center_type_general">Digər</string>
+    <string name="notifications_center_cleared">Bütün bildirişlər silindi.</string>
     <string name="prayer_times_title">Namaz vaxtları</string>
     <string name="prayer_summary_title">Məkan</string>
     <string name="prayer_city_title">Namaz vaxtları - %1$s, %2$s</string>
@@ -15,7 +30,7 @@
     <string name="today_imsak_iftar_title">Bu günün imsak və iftar vaxtı</string>
     <string name="prayer_using_saved_city">%1$s, %2$s</string>
     <string name="prayer_no_city_selected">Şəhər seçilməyib.</string>
-    <string name="prayer_settings_hint">Şəhər və reminder ayarları Tənzimləmələr bölməsində idarə olunur.</string>
+    <string name="prayer_settings_hint">Şəhər və reminder ayarları Ayarlar bölməsində idarə olunur.</string>
     <string name="prayer_refresh_button">Vaxtları yenilə</string>
     <string name="local_time_label">Yerli saat</string>
     <string name="gregorian_date_label">Bu gün</string>
@@ -146,7 +161,7 @@
     <string name="qibla_help_body">Telefonu düz tutun. Ox sabit qalır, kompas dairəsi isə sizin hərəkətinizə görə fırlanır. Məkkə işarəsi sabit oxla üst-üstə düşəndə istiqamət düzdür.</string>
     <string name="qibla_loading">Qiblə istiqaməti hesablanır...</string>
     <string name="qibla_permission_needed">Qiblə üçün məkan icazəsi lazımdır.</string>
-    <string name="qibla_location_needed">Qiblə üçün telefonun məkanı tapılmadı. Tənzimləmələrdən məkanı yeniləyin.</string>
+    <string name="qibla_location_needed">Qiblə üçün telefonun məkanı tapılmadı. Ayarlardan məkanı yeniləyin.</string>
     <string name="qibla_location_refresh_hint">Daha dəqiq nəticə üçün GPS və məkan xidmətləri aktiv olmalıdır.</string>
     <string name="qibla_direction_right_template">Biraz sağa dönün • təxminən %1$d°</string>
     <string name="qibla_direction_left_template">Biraz sola dönün • təxminən %1$d°</string>
@@ -191,7 +206,7 @@
     <string name="timer_title">Digər</string>
     <string name="timer_loading">Hazırlanır...</string>
     <string name="timer_placeholder">Sadə zikr/tesbih modulu: növbəti addımda əlavə ediləcək</string>
-    <string name="settings_title">Tənzimləmələr</string>
+    <string name="settings_title">Ayarlar</string>
     <string name="settings_intro">Bildirişlər, məkan, səs və tətbiq görünüşü burada idarə olunur.</string>
     <string name="settings_profile_section">İstifadəçi</string>
     <string name="settings_profile_summary_empty">Ad, cins və doğum tarixinizi əlavə edin ki, mesajlar sizə uyğun müraciətlə gəlsin.</string>
@@ -237,7 +252,7 @@
     <string name="settings_elder_mode_help">Daha iri mətn və daha aydın elementlər tətbiq olunur.</string>
     <string name="settings_appearance_saved">Görünüş ayarları yeniləndi.</string>
     <string name="settings_appearance_current">Şrift: %1$s • Rejim: %2$s</string>
-    <string name="settings_safe_mode_message">Tənzimləmələr təhlükəsiz rejimdə açıldı. Bəzi hissələri yenidən yoxlamaq lazımdır.</string>
+    <string name="settings_safe_mode_message">Ayarlar təhlükəsiz rejimdə açıldı. Bəzi hissələri yenidən yoxlamaq lazımdır.</string>
     <string name="settings_location_section">Məkan və namaz vaxtı mənbəyi</string>
     <string name="settings_location_summary_placeholder">Hazırkı şəhər, ölkə və namaz vaxtı mənbəyi burada görünür.</string>
     <string name="settings_location_help">Məkan və namaz vaxtı mənbəyini burada seç.</string>
@@ -362,8 +377,8 @@
     <string name="reminder_status_next_time_with_day">Növbəti reminder: %1$s - %2$s (%3$s)</string>
     <string name="reminder_day_today">bu gün</string>
     <string name="reminder_day_tomorrow">sabah</string>
-    <string name="settings_save_button">Tənzimləmələri yadda saxla</string>
-    <string name="settings_saved">Tənzimləmələr yadda saxlandı.</string>
+    <string name="settings_save_button">Ayarları yadda saxla</string>
+    <string name="settings_saved">Ayarlar yadda saxlandı.</string>
     <string name="settings_setup_incomplete">İstəsəniz profil, bildiriş, məkan və səs ayarlarını buradan tamamlayın.</string>
     <string name="setup_required_title">İlkin ayarlar lazımdır</string>
     <string name="setup_required_message">Tətbiq ilk dəfə açılır. Profil, bildiriş, məkan və azan ayarlarını bir dəfə tamamlayın.</string>

@@ -12,6 +12,7 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
+import com.muslimtime.app.data.NotificationCenterStore
 import com.muslimtime.app.data.PrayerPreferences
 import com.muslimtime.app.ui.MainActivity
 import java.util.Calendar
@@ -87,6 +88,12 @@ class BirthdayReminderReceiver : BroadcastReceiver() {
             .build()
 
         manager.notify(NOTIFICATION_ID, notification)
+        NotificationCenterStore.addGeneral(
+            context,
+            uniqueKey = "birthday_${System.currentTimeMillis() / 60000L}",
+            title = context.getString(R.string.birthday_title),
+            body = body,
+        )
     }
 
     companion object {
