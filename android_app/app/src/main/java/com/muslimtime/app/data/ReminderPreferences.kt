@@ -6,7 +6,6 @@ internal object ReminderPreferences {
     private const val PREFS_NAME = "prayer_prefs"
     private const val KEY_REMINDERS_ENABLED = "reminders_enabled"
     private const val KEY_JUMAA_NOTIFICATIONS = "jumaa_notifications"
-    private const val KEY_PRE_REMINDER_MINUTES = "pre_reminder_minutes"
     private const val KEY_REMINDER_TYPE = "reminder_type"
     private const val KEY_REPEAT_REMINDER_MINUTES = "repeat_reminder_minutes"
     private const val KEY_SHOW_IMSAK_IFTAR_OUTSIDE_RAMADAN = "show_imsak_iftar_outside_ramadan"
@@ -117,18 +116,6 @@ internal object ReminderPreferences {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putBoolean(KEY_JUMAA_NOTIFICATIONS, enabled)
-            .apply()
-    }
-
-    fun getPreReminderMinutes(context: Context): Int =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getInt(KEY_PRE_REMINDER_MINUTES, 5)
-            .coerceIn(0, 15)
-
-    fun setPreReminderMinutes(context: Context, minutes: Int) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putInt(KEY_PRE_REMINDER_MINUTES, minutes.coerceIn(0, 15))
             .apply()
     }
 

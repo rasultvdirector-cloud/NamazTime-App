@@ -345,19 +345,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/settings_reminder_before_label"
-            android:textStyle="bold" />
-
-        <Spinner
-            android:id="@+id/spinner_pre_reminder_dialog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp" />
-
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switch_jumaa_notifications_dialog"
             android:layout_width="match_parent"
@@ -381,16 +368,6 @@
             android:paddingStart="14dp"
             android:paddingEnd="14dp"
             android:text="@string/test_reminder_button" />
-
-        <Button
-            android:id="@+id/test_pre_reminder_button_dialog"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginTop="8dp"
-            android:minWidth="0dp"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:text="@string/test_prereminder_button" />
 
     </LinearLayout>
 </ScrollView>

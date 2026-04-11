@@ -40,8 +40,8 @@ internal fun prayerSourceSummaryText(context: Context, source: String): String {
     }
 }
 
-internal fun resolvedPrayerSourceLabel(context: Context, country: String): String {
-    val resolvedSource = PrayerTimesRepository.resolvedSource(context, country)
+internal fun resolvedPrayerSourceLabel(context: Context, city: String, country: String): String {
+    val resolvedSource = PrayerTimesRepository.resolvedSource(context, city, country)
     return context.getString(
         when (resolvedSource) {
             PrayerPreferences.PRAYER_SOURCE_QAFQAZ -> R.string.settings_prayer_source_qafqaz
@@ -156,13 +156,7 @@ internal fun reminderSummaryText(
     return when {
         !masterEnabled -> context.getString(R.string.reminder_master_disabled)
         enabledNames.isEmpty() -> context.getString(R.string.reminder_selection_empty)
-        else -> {
-            val before = PrayerPreferences.getPreReminderMinutes(context)
-            buildString {
-                append(enabledNames.joinToString(", "))
-                if (before > 0) append(" • $before dəq əvvəl")
-            }
-        }
+        else -> enabledNames.joinToString(", ")
     }
 }
 
@@ -206,7 +200,9 @@ internal fun reminderStatusLines(
             R.string.reminder_status_auto_location_off
         },
     )
-    val resolvedSource = PrayerTimesRepository.resolvedSource(context, location?.country.orEmpty())
+    val resolvedSource = location?.let {
+        PrayerTimesRepository.resolvedSource(context, it.city, it.country)
+    } ?: PrayerPreferences.PRAYER_SOURCE_ALADHAN
     val sourceStatus = context.getString(reminderSourceStatusRes(resolvedSource))
     val methodStatus = context.getString(reminderMethodStatusRes(resolvedSource))
     val syncStrategyStatus = context.getString(reminderSyncStatusRes(resolvedSource))
@@ -246,13 +242,6 @@ internal fun reminderHistoryBlock(context: Context): String {
 
 internal fun reminderDiagnosticsBlock(context: Context): String = ReminderDiagnosticsStore.diagnosticsBlock(context)
 internal fun reminderTelemetryBlock(context: Context): String = ReminderDiagnosticsStore.telemetryStatusBlock(context)
-
-internal fun preReminderOptions(context: Context): List<Pair<Int, String>> = listOf(
-    0 to context.getString(R.string.settings_reminder_before_off),
-    5 to context.getString(R.string.settings_reminder_before_5),
-    10 to context.getString(R.string.settings_reminder_before_10),
-    15 to context.getString(R.string.settings_reminder_before_15),
-)
 
 internal fun repeatReminderOptions(context: Context): List<Pair<Int, String>> = listOf(
     0 to context.getString(R.string.settings_reminder_repeat_off),

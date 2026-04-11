@@ -1,11 +1,16 @@
 package com.muslimtime.app.data
 
 import android.content.Context
+import com.muslimtime.app.BuildConfig
 import org.json.JSONObject
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Calendar
 
 object QafqazIslamRepository {
     private const val ASSET_FILE = "azerbaijan_prayer_times.json"
+    private const val CACHE_DIR = "qafqaz_month_cache"
     private val cityAliases = mapOf(
         "baki" to "baku",
         "baku" to "baku",
@@ -89,32 +94,137 @@ object QafqazIslamRepository {
         referenceDate: Calendar = Calendar.getInstance(),
     ): Boolean {
         if (!supports(country)) return false
-        val json = loadJson(context)
-        val cityObject = findCity(json, city, country) ?: return false
-        val currentMonthExists = hasMonthEntry(cityObject, referenceDate)
         val nextDate = (referenceDate.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
-        val nextMonthExists = hasMonthEntry(cityObject, nextDate)
-        return currentMonthExists && nextMonthExists
+        return hasCoverage(context, city, country, referenceDate) &&
+            hasCoverage(context, city, country, nextDate)
+    }
+
+    fun hasCoverage(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar = Calendar.getInstance(),
+    ): Boolean {
+        if (!supports(country)) return false
+        if (loadCachedMonth(context, city, country, date).isSuccess) return true
+        if (loadRemoteMonth(context, city, country, date).isSuccess) return true
+        val json = loadAssetJson(context)
+        val cityObject = findCity(json, city, country) ?: return false
+        return hasMonthEntry(cityObject, date)
     }
 
     fun getPrayerTimes(context: Context, city: String, country: String, date: Calendar): Result<RemotePrayerTimesResult> {
         return runCatching {
-            val json = loadJson(context)
-            val resolvedCity = findCity(json, city, country) ?: error("No Azerbaijan schedule found for $city")
-            val months = resolvedCity.getJSONArray("months")
-            val year = date.get(Calendar.YEAR)
-            val month = date.get(Calendar.MONTH) + 1
-            var monthObject: JSONObject? = null
-            for (index in 0 until months.length()) {
-                val item = months.getJSONObject(index)
-                if (item.getInt("year") == year && item.getInt("month") == month) {
-                    monthObject = item
-                    break
+            val result = loadRemoteMonth(context, city, country, date).getOrElse {
+                loadCachedMonth(context, city, country, date).getOrElse {
+                    loadLocalPrayerTimes(context, city, country, date).getOrThrow()
                 }
             }
+            warmMonthWindow(context, city, country, date)
+            result
+        }
+    }
 
-            val resolvedMonth = monthObject ?: error("No Azerbaijan schedule found for $city $month/$year")
-            val days = resolvedMonth.getJSONArray("days")
+    fun assetVersion(context: Context): Int = loadAssetJson(context).optInt("version", 1)
+
+    private fun loadLocalPrayerTimes(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): Result<RemotePrayerTimesResult> = runCatching {
+        val json = loadAssetJson(context)
+        val resolvedCity = findCity(json, city, country) ?: error("No Azerbaijan schedule found for $city")
+        val months = resolvedCity.getJSONArray("months")
+        val year = date.get(Calendar.YEAR)
+        val month = date.get(Calendar.MONTH) + 1
+        var monthObject: JSONObject? = null
+        for (index in 0 until months.length()) {
+            val item = months.getJSONObject(index)
+            if (item.getInt("year") == year && item.getInt("month") == month) {
+                monthObject = item
+                break
+            }
+        }
+
+        val resolvedMonth = monthObject ?: error("No Azerbaijan schedule found for $city $month/$year")
+        val days = resolvedMonth.getJSONArray("days")
+        buildRemotePrayerTimesResult(
+            city = resolvedCity.getString("city"),
+            country = json.getString("country"),
+            days = days,
+            date = date,
+        )
+    }
+
+    fun warmMonthWindow(
+        context: Context,
+        city: String,
+        country: String,
+        referenceDate: Calendar = Calendar.getInstance(),
+    ) {
+        if (!supports(country)) return
+        val currentDate = referenceDate.clone() as Calendar
+        val nextDate = (referenceDate.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
+        listOf(currentDate, nextDate).forEach { targetDate ->
+            if (!hasCachedMonth(context, city, country, targetDate)) {
+                loadRemoteMonth(context, city, country, targetDate)
+            }
+        }
+    }
+
+    private fun loadRemoteMonth(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): Result<RemotePrayerTimesResult> = runCatching {
+        val url = remoteMonthUrl(city, country, date) ?: error("No remote mirror mapping for $city, $country")
+        val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 15_000
+            readTimeout = 15_000
+        }
+        try {
+            val body = connection.inputStream.bufferedReader().use { it.readText() }
+            saveRemoteMonthCache(context, city, country, date, body)
+            val json = JSONObject(body)
+            val days = json.getJSONArray("days")
+            buildRemotePrayerTimesResult(
+                city = json.optString("city").ifBlank { canonicalDisplayCity(city) },
+                country = json.optString("country").ifBlank { "Azerbaijan" },
+                days = days,
+                date = date,
+            )
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun loadCachedMonth(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): Result<RemotePrayerTimesResult> = runCatching {
+        val cacheFile = monthCacheFile(context, city, country, date)
+        val body = cacheFile.takeIf { it.exists() }?.readText() ?: error("No cached month found for $city")
+        val json = JSONObject(body)
+        val days = json.getJSONArray("days")
+        buildRemotePrayerTimesResult(
+            city = json.optString("city").ifBlank { canonicalDisplayCity(city) },
+            country = json.optString("country").ifBlank { "Azerbaijan" },
+            days = days,
+            date = date,
+        )
+    }
+
+    private fun buildRemotePrayerTimesResult(
+        city: String,
+        country: String,
+        days: org.json.JSONArray,
+        date: Calendar,
+    ): RemotePrayerTimesResult {
             val targetDay = date.get(Calendar.DAY_OF_MONTH)
             var dayObject: JSONObject? = null
             for (index in 0 until days.length()) {
@@ -127,27 +237,68 @@ object QafqazIslamRepository {
 
             val day = dayObject ?: error("No day entry found for $targetDay")
 
-            RemotePrayerTimesResult(
-                city = resolvedCity.getString("city"),
-                country = json.getString("country"),
-                times = listOf(
-                    PrayerTime("Fajr", day.getString("fajr")),
-                    PrayerTime("Sunrise", day.getString("sunrise")),
-                    PrayerTime("Dhuhr", day.getString("dhuhr")),
-                    PrayerTime("Asr", day.getString("asr")),
-                    PrayerTime("Maghrib", day.getString("maghrib")),
-                    PrayerTime("Isha", day.getString("isha")),
-                ),
-                imsakTime = day.optString("imsak").ifBlank { day.getString("fajr") },
-            )
-        }
+        return RemotePrayerTimesResult(
+            city = city,
+            country = country,
+            times = listOf(
+                PrayerTime("Fajr", day.getString("fajr")),
+                PrayerTime("Sunrise", day.getString("sunrise")),
+                PrayerTime("Dhuhr", day.getString("dhuhr")),
+                PrayerTime("Asr", day.getString("asr")),
+                PrayerTime("Maghrib", day.getString("maghrib")),
+                PrayerTime("Isha", day.getString("isha")),
+            ),
+            imsakTime = day.optString("imsak").ifBlank { day.getString("fajr") },
+        )
     }
 
-    fun assetVersion(context: Context): Int = loadJson(context).optInt("version", 1)
-
-    private fun loadJson(context: Context): JSONObject {
+    private fun loadAssetJson(context: Context): JSONObject {
         val root = context.assets.open(ASSET_FILE).bufferedReader().use { it.readText() }
         return JSONObject(root)
+    }
+
+    private fun hasCachedMonth(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): Boolean = monthCacheFile(context, city, country, date).exists()
+
+    private fun saveRemoteMonthCache(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+        body: String,
+    ) {
+        val cacheFile = monthCacheFile(context, city, country, date)
+        cacheFile.parentFile?.mkdirs()
+        cacheFile.writeText(body)
+    }
+
+    private fun monthCacheFile(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): File {
+        val cacheRoot = File(context.filesDir, CACHE_DIR)
+        val countryKey = canonicalCountryKey(country)
+        val cityKey = canonicalCityKey(city)
+        val year = date.get(Calendar.YEAR)
+        val month = date.get(Calendar.MONTH) + 1
+        return File(cacheRoot, "$countryKey-$cityKey-%04d-%02d.json".format(year, month))
+    }
+
+    private fun remoteMonthUrl(city: String, country: String, date: Calendar): String? {
+        if (!supports(country)) return null
+        val baseUrl = BuildConfig.QAFQAZ_MIRROR_BASE_URL.trim().trimEnd('/')
+        if (baseUrl.isBlank()) return null
+        val year = date.get(Calendar.YEAR)
+        val month = date.get(Calendar.MONTH) + 1
+        val cityKey = canonicalCityKey(city)
+        val countryKey = canonicalCountryKey(country)
+        return "$baseUrl/$countryKey/$cityKey/%04d-%02d.json".format(year, month)
     }
 
     private fun findCity(json: JSONObject, city: String, country: String): JSONObject? {
@@ -194,6 +345,9 @@ object QafqazIslamRepository {
             else -> normalized
         }
     }
+
+    private fun canonicalDisplayCity(raw: String): String =
+        canonicalCityKey(raw).replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
     private fun normalize(raw: String): String {
         return raw.trim()

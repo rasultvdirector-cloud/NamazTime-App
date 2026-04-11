@@ -107,9 +107,14 @@ internal fun fetchAndPersistPrayerLocation(
                 val localizedTimes = remote.times.mapIndexed { index, item ->
                     item.copy(name = localizedNames.getOrElse(index) { item.name })
                 }
-                val updated = CityPrayerTimes(remote.city, remote.country, localizedTimes, remote.imsakTime)
+                val updated = CityPrayerTimes(
+                    city = if (remote.city.isBlank()) location.city else remote.city,
+                    country = if (remote.country.isBlank()) location.country else remote.country,
+                    times = localizedTimes,
+                    imsakTime = remote.imsakTime,
+                )
                 PrayerPreferences.saveSelectedPrayerTimes(context, updated)
-                val resolvedSource = PrayerTimesRepository.resolvedSource(context, updated.country)
+                val resolvedSource = PrayerTimesRepository.resolvedSource(context, updated.city, updated.country)
                 if (resolvedSource == PrayerPreferences.PRAYER_SOURCE_QAFQAZ) {
                     PrayerPreferences.setLastAzerbaijanSyncMonth(
                         context,

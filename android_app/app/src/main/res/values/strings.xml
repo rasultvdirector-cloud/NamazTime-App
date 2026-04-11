@@ -294,11 +294,6 @@
     <string name="settings_prayer_source_help_ummah">Alternativ qlobal mənbədir. Alınmasa AlAdhan fallback olur.</string>
     <string name="settings_jumaa_notifications_label">Cümə günü bildirişləri</string>
     <string name="settings_reminders_help">Bildiriş növünü burada seç.</string>
-    <string name="settings_reminder_before_label">Namazdan əvvəl xəbər ver</string>
-    <string name="settings_reminder_before_off">Söndürülüb</string>
-    <string name="settings_reminder_before_5">5 dəqiqə əvvəl</string>
-    <string name="settings_reminder_before_10">10 dəqiqə əvvəl</string>
-    <string name="settings_reminder_before_15">15 dəqiqə əvvəl</string>
     <string name="settings_reminder_prayer_actions_label">Hər namaz üçün seçim et</string>
     <string name="settings_reminder_prayer_actions_help">Azan və siqnal eyni anda seçilə bilməz. Bildirişi ayrıca açıb bağlaya bilərsiniz.</string>
     <string name="settings_prayer_action_azan">Azan</string>
@@ -339,7 +334,6 @@
     <string name="stop_azan_button">Səsi dayandır</string>
     <string name="azan_selection_saved">Azan səsi yadda saxlandı.</string>
     <string name="test_reminder_button">Bildirişi test et</string>
-    <string name="test_prereminder_button">Öncədən xatırlatmanı test et</string>
     <string name="reminder_status_title">Yoxlama məlumatı</string>
     <string name="reminder_status_card_help">Status və qılınan namaz tarixçəsini ayrıca açıb baxın.</string>
     <string name="reminder_status_open_details">Detallara bax</string>
@@ -435,8 +429,6 @@
     <string name="reminder_channel_name">Namaz xatırlatmaları</string>
     <string name="reminder_notification_title">%1$s vaxtı</string>
     <string name="reminder_notification_title_dynamic">%1$s vaxtıdır</string>
-    <string name="reminder_prereminder_title">%1$s namazına %2$d dəqiqə qalıb</string>
-    <string name="reminder_prereminder_body">Namaz vaxtı yaxınlaşır. Hazırlaşa bilərsiniz.</string>
     <string name="reminder_repeat_title">%1$s namazı üçün təkrar xatırlatma</string>
     <string name="reminder_repeat_body">%1$s namazı üçün xatırlatma yenidən göstərilir.</string>
     <string name="reminder_notification_iftar_title">%1$s üçün iftar vaxtıdır</string>

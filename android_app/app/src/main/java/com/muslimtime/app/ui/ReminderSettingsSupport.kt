@@ -8,7 +8,6 @@ import com.muslimtime.app.notifications.PrayerRefreshScheduler
 internal data class ReminderSettingsSelection(
     val masterEnabled: Boolean,
     val jumaaEnabled: Boolean,
-    val preReminderMinutes: Int,
     val repeatMinutes: Int,
     val showImsakIftarAllMonths: Boolean,
     val prayerModes: List<String>,
@@ -23,7 +22,6 @@ internal fun persistReminderSettings(
 ) {
     PrayerPreferences.setRemindersGloballyEnabled(context, selection.masterEnabled)
     PrayerPreferences.setJumaaNotificationsEnabled(context, selection.jumaaEnabled)
-    PrayerPreferences.setPreReminderMinutes(context, selection.preReminderMinutes)
     PrayerPreferences.setRepeatReminderMinutes(context, selection.repeatMinutes)
     PrayerPreferences.setShowImsakIftarOutsideRamadan(context, selection.showImsakIftarAllMonths)
     selection.prayerModes.forEachIndexed { index, mode ->

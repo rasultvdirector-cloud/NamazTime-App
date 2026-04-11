@@ -25,7 +25,6 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         val prayerId = intent.getIntExtra(EXTRA_ID, 0)
         val requestCode = intent.getIntExtra(EXTRA_REQUEST_CODE, prayerId)
         val kind = intent.getStringExtra(EXTRA_KIND) ?: KIND_MAIN
-        val leadMinutes = intent.getIntExtra(EXTRA_LEAD_MINUTES, 0)
         val repeatCount = intent.getIntExtra(EXTRA_REPEAT_COUNT, 0)
         val notificationOnly = intent.getBooleanExtra(EXTRA_NOTIFICATION_ONLY, false)
         ReminderDiagnosticsStore.record(
@@ -35,7 +34,6 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         )
 
         when (kind) {
-            KIND_PRE -> showPreReminder(context, prayerName, prayerId, requestCode, leadMinutes)
             KIND_DELAYED_NOTIFICATION -> showMainNotification(
                 context,
                 prayerName,
@@ -62,53 +60,6 @@ class PrayerReminderReceiver : BroadcastReceiver() {
                 notificationOnly = notificationOnly,
             )
         }
-    }
-
-    private fun showPreReminder(
-        context: Context,
-        prayerName: String,
-        prayerId: Int,
-        requestCode: Int,
-        leadMinutes: Int,
-    ) {
-        val reminderMessage = buildPreReminderMessage(context, prayerName, prayerId, leadMinutes)
-        ReminderDiagnosticsStore.record(
-            context,
-            "pre_reminder_shown",
-            "prayer=$prayerName id=$prayerId lead=$leadMinutes",
-        )
-        val manager = ensureChannel(
-            context = context,
-            channelId = PRE_REMINDER_CHANNEL_ID,
-            name = context.getString(R.string.reminder_channel_name),
-            silent = true,
-        )
-
-        val launchPending = PendingIntent.getActivity(
-            context,
-            requestCode + 5000,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-
-        val notification = NotificationCompat.Builder(context, PRE_REMINDER_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_popup_reminder)
-            .setContentTitle(reminderMessage.title)
-            .setContentText(reminderMessage.body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(reminderMessage.body))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
-            .setAutoCancel(true)
-            .setContentIntent(launchPending)
-            .build()
-
-        NotificationCenterStore.addPrayer(
-            context,
-            uniqueKey = "pre_${prayerId}_${System.currentTimeMillis() / 60000L}",
-            title = reminderMessage.title,
-            body = reminderMessage.body,
-        )
-        notifyIfAllowed(context, manager, requestCode, notification)
     }
 
     private fun showMainReminder(
@@ -139,15 +90,21 @@ class PrayerReminderReceiver : BroadcastReceiver() {
             PrayerReminderScheduler.scheduleNextForPrayerId(context, prayerId, forceTomorrow = true)
         }
 
-        if (prayerId != TEST_NOTIFICATION_ID && PrayerPreferences.getRepeatReminderMinutes(context) > 0) {
-            PrayerReminderScheduler.scheduleRepeatReminder(context, prayerName, prayerId, repeatCount + 1)
-        }
-
         val playbackMode = when {
             notificationOnly -> null
             reminderMode == PrayerPreferences.REMINDER_MODE_AZAN -> ReminderAudioSupport.PLAYBACK_MODE_AZAN
             reminderMode == PrayerPreferences.REMINDER_MODE_SIGNAL -> ReminderAudioSupport.PLAYBACK_MODE_SIGNAL
             else -> null
+        }
+
+        if (prayerId != TEST_NOTIFICATION_ID && PrayerPreferences.getRepeatReminderMinutes(context) > 0) {
+            PrayerReminderScheduler.scheduleRepeatReminder(
+                context = context,
+                prayerName = prayerName,
+                prayerId = prayerId,
+                repeatCount = repeatCount + 1,
+                notificationOnly = playbackMode != null,
+            )
         }
 
         if (playbackMode != null) {
@@ -395,41 +352,6 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         return hijriCalendar.get(IslamicCalendar.MONTH) == 8
     }
 
-    private fun buildPreReminderMessage(
-        context: Context,
-        prayerName: String,
-        id: Int,
-        leadMinutes: Int,
-    ): ReminderMessage {
-        val prayerKey = prayerKey(context, prayerName)
-        val title = context.getString(
-            R.string.reminder_prereminder_title,
-            prayerName.removeSuffix(" namazı"),
-            leadMinutes,
-        )
-        val base = AzerbaijaniDuaRepository.nextMessage(
-            context,
-            "pre_message_${if (prayerKey.isBlank()) "general" else prayerKey}",
-            AzerbaijaniDuaRepository.prayerMessages(context, prayerKey) +
-                AzerbaijaniDuaRepository.prayerMessages(context) +
-                AzerbaijaniDuaRepository.dailyMessages(context),
-        ).ifBlank {
-            context.getString(R.string.reminder_prereminder_body)
-        }
-        val closing = AzerbaijaniDuaRepository.nextMessage(
-            context,
-            "pre_closing_${if (prayerKey.isBlank()) "general" else prayerKey}",
-            AzerbaijaniDuaRepository.prayerClosings(context, prayerKey) +
-                AzerbaijaniDuaRepository.prayerClosings(context),
-        ).ifBlank {
-            context.getString(R.string.reminder_body_prayer_4)
-        }
-        return ReminderMessage(
-            title = title,
-            body = personalize(context, "$base ${closing.trim()}".trim()),
-        )
-    }
-
     private fun buildRepeatBody(
         context: Context,
         prayerName: String,
@@ -482,15 +404,12 @@ class PrayerReminderReceiver : BroadcastReceiver() {
         const val EXTRA_ID = "extra_id"
         const val EXTRA_REQUEST_CODE = "extra_request_code"
         const val EXTRA_KIND = "extra_kind"
-        const val EXTRA_LEAD_MINUTES = "extra_lead_minutes"
         const val EXTRA_REPEAT_COUNT = "extra_repeat_count"
         const val EXTRA_NOTIFICATION_ONLY = "extra_notification_only"
-        const val KIND_PRE = "pre"
         const val KIND_MAIN = "main"
         const val KIND_REPEAT = "repeat"
         const val KIND_DELAYED_NOTIFICATION = "delayed_notification"
         const val TEST_NOTIFICATION_ID = 9001
-        private const val PRE_REMINDER_CHANNEL_ID = "prayer_pre_reminder_channel"
         private const val MAIN_REMINDER_CHANNEL_ID = "prayer_reminder_channel_silent"
     }
 }

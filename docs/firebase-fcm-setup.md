@@ -20,6 +20,12 @@ NamazTime bu quruluşla Firebase Console üzərindən ayrıca server olmadan pus
 android_app/app/google-services.json
 ```
 
+Qeyd:
+
+- Bu faylı repoya commit etmə.
+- `.gitignore` artıq onu lokal saxlayacaq.
+- Əgər fayl nə vaxtsa repoya düşübsə, Firebase API açarını rotate/revoke et.
+
 ## Sonra nə olacaq
 
 - app açılan kimi Firebase token alacaq

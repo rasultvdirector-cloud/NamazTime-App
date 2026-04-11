@@ -60,6 +60,7 @@ android_app/local.properties
 android_app/keystore.properties
 android_app/*.jks
 android_app/app.run.xml
+android_app/app/google-services.json
 
 # Old nested repo copy
 android_app/NamazTime/

@@ -20,7 +20,6 @@ object PrayerPreferences {
     private const val KEY_SETUP_COMPLETE = "setup_complete"
     private const val KEY_REMINDERS_ENABLED = "reminders_enabled"
     private const val KEY_JUMAA_NOTIFICATIONS = "jumaa_notifications"
-    private const val KEY_PRE_REMINDER_MINUTES = "pre_reminder_minutes"
     private const val KEY_REMINDER_TYPE = "reminder_type"
     private const val KEY_REPEAT_REMINDER_MINUTES = "repeat_reminder_minutes"
     private const val KEY_SHOW_IMSAK_IFTAR_OUTSIDE_RAMADAN = "show_imsak_iftar_outside_ramadan"
@@ -199,11 +198,6 @@ object PrayerPreferences {
 
     fun setJumaaNotificationsEnabled(context: Context, enabled: Boolean) =
         ReminderPreferences.setJumaaNotificationsEnabled(context, enabled)
-
-    fun getPreReminderMinutes(context: Context): Int = ReminderPreferences.getPreReminderMinutes(context)
-
-    fun setPreReminderMinutes(context: Context, minutes: Int) =
-        ReminderPreferences.setPreReminderMinutes(context, minutes)
 
     fun getRepeatReminderMinutes(context: Context): Int =
         ReminderPreferences.getRepeatReminderMinutes(context)

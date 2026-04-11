@@ -3916,7 +3916,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         suppressLocationSpinnerCallbacks = false
     }
 
-    private fun sourceLabelFor(country: String): String = resolvedPrayerSourceLabel(requireContext(), country)
+    private fun sourceLabelFor(city: String, country: String): String = resolvedPrayerSourceLabel(requireContext(), city, country)
 
     private fun fetchAndPersistLocation(location: AppLocation, isAutoDetected: Boolean) {
         val fragmentContext = context ?: return
@@ -4143,9 +4143,6 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         val boundState = NotificationSettingsDialogSupport.bindState(
             context = context,
             view = dialogView,
-            preReminderOptions = preReminderOptions(context),
-            bindLabelSpinner = { spinner, labels, index -> bindLabelSpinner(context, spinner, labels, index) },
-            pairOptionIndexInt = { options, value -> pairOptionIndex(options, value) },
         )
 
         suppressNotificationDialogAutoSave = true
@@ -4153,12 +4150,7 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         fun persistReminderPreferences() {
             if (suppressNotificationDialogAutoSave || view == null) return
             runCatching {
-                val selection = NotificationSettingsDialogSupport.buildSelection(
-                    context = context,
-                    bindings = boundState.bindings,
-                    options = boundState.options,
-                    selectedIntValue = { spinner, options, fallback -> selectedPairValueOr(spinner, options, fallback) },
-                )
+                val selection = NotificationSettingsDialogSupport.buildSelection(boundState.bindings)
                 NotificationSettingsDialogSupport.persistSelection(
                     context = context,
                     selection = selection,
@@ -4176,14 +4168,12 @@ class TimerFragment : Fragment(R.layout.fragment_timer) {
         NotificationSettingsDialogSupport.attachAutoSaveListeners(
             bindings = boundState.bindings,
             persist = { persistReminderPreferences() },
-            selectionListenerFactory = { callback -> simpleSelectionListener { callback() } },
         )
         suppressNotificationDialogAutoSave = false
         val showInternalTestButtons = com.muslimtime.app.BuildConfig.DEBUG
         boundState.bindings.testReminderButton.visibility = if (showInternalTestButtons) View.VISIBLE else View.GONE
-        boundState.bindings.testPreReminderButton.visibility = if (showInternalTestButtons) View.VISIBLE else View.GONE
         if (showInternalTestButtons) {
-            NotificationSettingsDialogSupport.attachTestActions(context, boundState.bindings, boundState.options)
+            NotificationSettingsDialogSupport.attachTestActions(context, boundState.bindings)
         }
         DialogSupport.createOkDialog(
             context = context,

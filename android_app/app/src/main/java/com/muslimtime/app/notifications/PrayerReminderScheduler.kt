@@ -12,7 +12,6 @@ import java.util.Calendar
 
 object PrayerReminderScheduler {
     private val mainRequestCodes = listOf(7, 8, 9, 10, 11, 12)
-    private val preRequestCodes = listOf(107, 108, 109, 110, 111, 112)
     private val repeatRequestCodes = listOf(207, 208, 209, 210, 211, 212)
     private val delayedNotificationRequestCodes = listOf(307, 308, 309, 310, 311, 312)
     private const val MAX_REPEAT_COUNT = 3
@@ -37,7 +36,6 @@ object PrayerReminderScheduler {
         if (!PrayerPreferences.isReminderEnabled(context, prayerIndex)) return
 
         cancelReminder(context, mainRequestCodes[prayerIndex])
-        cancelReminder(context, preRequestCodes[prayerIndex])
         cancelReminder(context, repeatRequestCodes[prayerIndex])
         cancelReminder(context, delayedNotificationRequestCodes[prayerIndex])
 
@@ -50,6 +48,7 @@ object PrayerReminderScheduler {
         prayerName: String,
         prayerId: Int,
         repeatCount: Int,
+        notificationOnly: Boolean = false,
     ) {
         val interval = PrayerPreferences.getRepeatReminderMinutes(context)
         if (interval <= 0 || repeatCount >= MAX_REPEAT_COUNT) return
@@ -65,14 +64,14 @@ object PrayerReminderScheduler {
             prayerId = prayerId,
             requestCode = requestCode,
             kind = PrayerReminderReceiver.KIND_REPEAT,
-            leadMinutes = 0,
             repeatCount = repeatCount,
+            notificationOnly = notificationOnly,
         )
         scheduleExactAt(context, requestCode, repeatIntent, triggerAt)
     }
 
     fun cancelAll(context: Context) {
-        (mainRequestCodes + preRequestCodes + repeatRequestCodes + delayedNotificationRequestCodes).forEach {
+        (mainRequestCodes + repeatRequestCodes + delayedNotificationRequestCodes).forEach {
             cancelReminder(context, it)
         }
     }
@@ -116,23 +115,6 @@ object PrayerReminderScheduler {
         )
         scheduleExactAt(context, mainRequestCode, mainIntent, eventMoment.timeInMillis)
 
-        val leadMinutes = PrayerPreferences.getPreReminderMinutes(context)
-        if (leadMinutes > 0) {
-            val preMoment = Calendar.getInstance().apply { timeInMillis = eventMoment.timeInMillis }
-            preMoment.add(Calendar.MINUTE, -leadMinutes)
-            if (forceTomorrow || preMoment.timeInMillis > System.currentTimeMillis()) {
-                val preRequestCode = preRequestCodes[prayerIndex]
-                val preIntent = buildReceiverIntent(
-                    context = context,
-                    prayerName = label,
-                    prayerId = mainRequestCode,
-                    requestCode = preRequestCode,
-                    kind = PrayerReminderReceiver.KIND_PRE,
-                    leadMinutes = leadMinutes,
-                )
-                scheduleExactAt(context, preRequestCode, preIntent, preMoment.timeInMillis)
-            }
-        }
     }
 
     private fun buildPrayerMoment(time: String, forceTomorrow: Boolean): Calendar? {
@@ -155,16 +137,16 @@ object PrayerReminderScheduler {
         prayerId: Int,
         requestCode: Int,
         kind: String,
-        leadMinutes: Int = 0,
         repeatCount: Int = 0,
+        notificationOnly: Boolean = false,
     ): Intent {
         return Intent(context, PrayerReminderReceiver::class.java).apply {
             putExtra(PrayerReminderReceiver.EXTRA_PRAYER, prayerName)
             putExtra(PrayerReminderReceiver.EXTRA_ID, prayerId)
             putExtra(PrayerReminderReceiver.EXTRA_REQUEST_CODE, requestCode)
             putExtra(PrayerReminderReceiver.EXTRA_KIND, kind)
-            putExtra(PrayerReminderReceiver.EXTRA_LEAD_MINUTES, leadMinutes)
             putExtra(PrayerReminderReceiver.EXTRA_REPEAT_COUNT, repeatCount)
+            putExtra(PrayerReminderReceiver.EXTRA_NOTIFICATION_ONLY, notificationOnly)
         }
     }
 
@@ -214,7 +196,6 @@ object PrayerReminderScheduler {
 
     fun prayerIndexFromAnyId(prayerId: Int): Int {
         return prayerIndexFromMainId(prayerId).takeIf { it != -1 }
-            ?: preRequestCodes.indexOf(prayerId).takeIf { it != -1 }
             ?: repeatRequestCodes.indexOf(prayerId).takeIf { it != -1 }
             ?: delayedNotificationRequestCodes.indexOf(prayerId)
     }

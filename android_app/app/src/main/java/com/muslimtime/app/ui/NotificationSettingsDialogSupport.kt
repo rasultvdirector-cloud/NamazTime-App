@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.Button
-import android.widget.Spinner
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.muslimtime.app.R
@@ -21,25 +20,17 @@ internal object NotificationSettingsDialogSupport {
 
     internal data class Bindings(
         val jumaaSwitch: androidx.appcompat.widget.SwitchCompat,
-        val preReminderSpinner: Spinner,
         val showImsakIftarAllMonthsSwitch: androidx.appcompat.widget.SwitchCompat,
         val prayerRows: List<PrayerRowBindings>,
         val testReminderButton: Button,
-        val testPreReminderButton: Button,
-    )
-
-    internal data class SpinnerOptions(
-        val preReminderOptions: List<Pair<Int, String>>,
     )
 
     internal data class BoundState(
         val bindings: Bindings,
-        val options: SpinnerOptions,
     )
 
     internal fun collectBindings(view: View): Bindings = Bindings(
         jumaaSwitch = view.findViewById(R.id.switch_jumaa_notifications_dialog),
-        preReminderSpinner = view.findViewById(R.id.spinner_pre_reminder_dialog),
         showImsakIftarAllMonthsSwitch = view.findViewById(R.id.switch_show_imsak_iftar_all_months_dialog),
         prayerRows = listOf(
             PrayerRowBindings(
@@ -69,24 +60,15 @@ internal object NotificationSettingsDialogSupport {
             ),
         ),
         testReminderButton = view.findViewById(R.id.test_reminder_button_dialog),
-        testPreReminderButton = view.findViewById(R.id.test_pre_reminder_button_dialog),
     )
 
     internal fun bindState(
         context: Context,
         view: View,
-        preReminderOptions: List<Pair<Int, String>>,
-        bindLabelSpinner: (Spinner, List<String>, Int) -> Unit,
-        pairOptionIndexInt: (List<Pair<Int, String>>, Int) -> Int,
     ): BoundState {
         val bindings = collectBindings(view)
-        bindLabelSpinner(
-            bindings.preReminderSpinner,
-            preReminderOptions.map { it.second },
-            pairOptionIndexInt(preReminderOptions, PrayerPreferences.getPreReminderMinutes(context)),
-        )
         bindInitialSwitchState(context, bindings)
-        return BoundState(bindings, SpinnerOptions(preReminderOptions))
+        return BoundState(bindings)
     }
 
     internal fun bindInitialSwitchState(context: Context, bindings: Bindings) {
@@ -167,12 +149,7 @@ internal object NotificationSettingsDialogSupport {
         )
     }
 
-    internal fun buildSelection(
-        context: Context,
-        bindings: Bindings,
-        options: SpinnerOptions,
-        selectedIntValue: (Spinner, List<Pair<Int, String>>, Int) -> Int,
-    ): ReminderSettingsSelection {
+    internal fun buildSelection(bindings: Bindings): ReminderSettingsSelection {
         val prayerModes = buildPrayerModes(bindings.prayerRows)
         val notificationStates = buildPrayerNotifications(bindings.prayerRows)
         val anyEnabled = prayerModes.indices.any { index ->
@@ -181,11 +158,6 @@ internal object NotificationSettingsDialogSupport {
         return ReminderSettingsSelection(
             masterEnabled = anyEnabled,
             jumaaEnabled = bindings.jumaaSwitch.isChecked,
-            preReminderMinutes = selectedIntValue(
-                bindings.preReminderSpinner,
-                options.preReminderOptions,
-                PrayerPreferences.getPreReminderMinutes(context),
-            ),
             repeatMinutes = 0,
             showImsakIftarAllMonths = bindings.showImsakIftarAllMonthsSwitch.isChecked,
             prayerModes = prayerModes,
@@ -202,9 +174,8 @@ internal object NotificationSettingsDialogSupport {
         persistReminderSettings(context, selection, currentPrayerTimes, scheduleReminderSet)
     }
 
-    internal fun attachAutoSaveListeners(bindings: Bindings, persist: () -> Unit, selectionListenerFactory: (() -> Unit) -> android.widget.AdapterView.OnItemSelectedListener) {
+    internal fun attachAutoSaveListeners(bindings: Bindings, persist: () -> Unit) {
         bindings.jumaaSwitch.setOnCheckedChangeListener { _, _ -> persist() }
-        bindings.preReminderSpinner.onItemSelectedListener = selectionListenerFactory(persist)
         bindings.showImsakIftarAllMonthsSwitch.setOnCheckedChangeListener { _, _ -> persist() }
         bindings.prayerRows.forEach { row ->
             row.azanToggle.setOnClickListener {
@@ -223,13 +194,9 @@ internal object NotificationSettingsDialogSupport {
         }
     }
 
-    internal fun attachTestActions(context: Context, bindings: Bindings, options: SpinnerOptions) {
+    internal fun attachTestActions(context: Context, bindings: Bindings) {
         bindings.testReminderButton.setOnClickListener {
             sendNotificationOnlyReminderTest(context, context.getString(R.string.reminder_test_prayer_name))
-        }
-        bindings.testPreReminderButton.setOnClickListener {
-            val lead = options.preReminderOptions[bindings.preReminderSpinner.selectedItemPosition].first.takeIf { it > 0 } ?: 5
-            sendPreReminderTest(context, context.getString(R.string.prayer_name_dhuhr), lead)
         }
     }
 
@@ -244,15 +211,4 @@ internal object NotificationSettingsDialogSupport {
         )
     }
 
-    internal fun sendPreReminderTest(context: Context, prayerName: String, leadMinutes: Int) {
-        context.sendBroadcast(
-            Intent(context, PrayerReminderReceiver::class.java).apply {
-                putExtra(PrayerReminderReceiver.EXTRA_PRAYER, prayerName)
-                putExtra(PrayerReminderReceiver.EXTRA_ID, PrayerReminderReceiver.TEST_NOTIFICATION_ID + 1)
-                putExtra(PrayerReminderReceiver.EXTRA_REQUEST_CODE, PrayerReminderReceiver.TEST_NOTIFICATION_ID + 1)
-                putExtra(PrayerReminderReceiver.EXTRA_KIND, PrayerReminderReceiver.KIND_PRE)
-                putExtra(PrayerReminderReceiver.EXTRA_LEAD_MINUTES, leadMinutes)
-            },
-        )
-    }
 }

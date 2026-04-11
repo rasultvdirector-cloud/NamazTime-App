@@ -11,7 +11,7 @@ object PrayerDataSyncManager {
     fun syncToday(context: Context): Result<CityPrayerTimes> {
         val location = PrayerPreferences.loadSelectedLocation(context)
             ?: return Result.failure(IllegalStateException("Location not selected"))
-        val resolvedSource = PrayerTimesRepository.resolvedSource(context, location.country)
+        val resolvedSource = PrayerTimesRepository.resolvedSource(context, location.city, location.country)
         return PrayerTimesRepository.fetchByCity(context, location.city, location.country).map { remote ->
             val localizedNames = PrayerPreferences.localizedPrayerNames(context)
             val localizedTimes = remote.times.mapIndexed { index, item ->
@@ -25,6 +25,8 @@ object PrayerDataSyncManager {
             ).also { updated ->
                 PrayerPreferences.saveSelectedPrayerTimes(context, updated)
                 if (resolvedSource == PrayerPreferences.PRAYER_SOURCE_QAFQAZ) {
+                    QafqazIslamRepository.warmMonthWindow(context, location.city, location.country)
+                    PrayerPreferences.setLastPrayerSyncDate(context, todayKey())
                     PrayerPreferences.setLastAzerbaijanSyncMonth(context, monthKey())
                     PrayerPreferences.setLastAzerbaijanSyncWindow(context, QafqazIslamRepository.monthWindowKey())
                     PrayerPreferences.setLastAzerbaijanAssetVersion(context, QafqazIslamRepository.assetVersion(context))
@@ -42,7 +44,7 @@ object PrayerDataSyncManager {
     fun shouldUseDailyRefreshAlarm(context: Context): Boolean =
         PrayerPreferences.hasCompletedInitialSetup(context) &&
             PrayerPreferences.loadSelectedLocation(context)?.let {
-                PrayerTimesRepository.resolvedSource(context, it.country) == PrayerPreferences.PRAYER_SOURCE_ALADHAN
+                PrayerTimesRepository.resolvedSource(context, it.city, it.country) == PrayerPreferences.PRAYER_SOURCE_ALADHAN
             } == true
 
     fun shouldUsePeriodicWorker(context: Context): Boolean =
@@ -51,9 +53,10 @@ object PrayerDataSyncManager {
 
     fun isTodaySynced(context: Context): Boolean =
         PrayerPreferences.loadSelectedLocation(context)?.let {
-            when (PrayerTimesRepository.resolvedSource(context, it.country)) {
+            when (PrayerTimesRepository.resolvedSource(context, it.city, it.country)) {
                 PrayerPreferences.PRAYER_SOURCE_QAFQAZ ->
-                    PrayerPreferences.getLastAzerbaijanSyncWindow(context) == QafqazIslamRepository.monthWindowKey() &&
+                    PrayerPreferences.getLastPrayerSyncDate(context) == todayKey() &&
+                        PrayerPreferences.getLastAzerbaijanSyncWindow(context) == QafqazIslamRepository.monthWindowKey() &&
                         PrayerPreferences.getLastAzerbaijanAssetVersion(context) == QafqazIslamRepository.assetVersion(context) &&
                         PrayerPreferences.loadSelectedPrayerTimes(context) != null &&
                         QafqazIslamRepository.hasCurrentAndNextMonthCoverage(context, it.city, it.country)

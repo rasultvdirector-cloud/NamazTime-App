@@ -24,6 +24,11 @@ val telemetryBaseUrl = (
         ?: System.getenv("NAMAZTIME_TELEMETRY_BASE_URL")
         ?: ""
     ).replace("\"", "\\\"")
+val qafqazMirrorBaseUrl = (
+    localProperties.getProperty("namaztime.qafqazMirrorBaseUrl")
+        ?: System.getenv("NAMAZTIME_QAFQAZ_MIRROR_BASE_URL")
+        ?: "https://namaz-time-data.prompteraz-app.workers.dev"
+    ).trim().trimEnd('/').replace("\"", "\\\"")
 
 android {
     namespace = "com.muslimtime.app"
@@ -33,10 +38,11 @@ android {
         applicationId = "com.muslimtime.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 13
-        versionName = "2.0.3"
+        versionCode = 15
+        versionName = "2.0.5"
         buildConfigField("boolean", "FIREBASE_PUSH_ENABLED", firebasePushEnabled.toString())
         buildConfigField("String", "TELEMETRY_BASE_URL", "\"$telemetryBaseUrl\"")
+        buildConfigField("String", "QAFQAZ_MIRROR_BASE_URL", "\"$qafqazMirrorBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

@@ -37,10 +37,10 @@ class PrayerTimesRefreshWorker(
                 return
             }
 
-            val request = PeriodicWorkRequestBuilder<PrayerTimesRefreshWorker>(7, TimeUnit.DAYS)
+            val request = PeriodicWorkRequestBuilder<PrayerTimesRefreshWorker>(1, TimeUnit.DAYS)
                 .setConstraints(
                     Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.UNMETERED)
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
                         .build(),
                 )
                 .setInitialDelay(initialDelayUntilQuietHour(), TimeUnit.MILLISECONDS)

@@ -2,41 +2,72 @@
 
 Məqsəd:
 - `android_app/app/src/main/assets/azerbaijan_prayer_times.json` faylını əl ilə redaktə etməmək
-- cari ay və növbəti ay datasını sürətli yeniləmək
+- cari ay və növbəti ay datasını rəsmi Qafqazislam şəkil cədvəlindən almaq
+- bütün aylarda rəsmi sütun ardıcıllığını qorumaq
 - Bakı və digər şəhərlər üçün eyni workflow istifadə etmək
 
-## 1. Mənbə cədvəli hazırla
+## 1. Rəsmi sütun ardıcıllığı
 
-Qafqazislam cədvəlini bu sütunlarla `csv` və ya `tsv` kimi saxla:
+Qafqazislam şəkillərində sütunlar bu ardıcıllıqla gəlir və parser bunu sabit qayda kimi qəbul edir:
 
 ```text
-day,imsak,fajr,sunrise,dhuhr,asr,maghrib,isha
-1,05:49,05:54,07:14,12:53,16:49,18:47,19:47
-2,05:47,05:52,07:12,12:53,16:50,18:48,19:48
+ayın günləri
+hicri ayın günləri
+həftənin günləri
+imsak vaxtı
+sübh azanı
+gün çıxır
+zöhr azanı
+əsr azanı
+gün batır
+məğrib azanı
+işa azanı
+gecə yarısı
 ```
 
-App-də istifadə etmədiyimiz sütunları daxil etmə:
-- `gün batır`
-- `gecə yarısı`
+App bu sıradan aşağıdakı map-i istifadə edir:
+- `imsak vaxtı` -> `imsak`
+- `sübh azanı` -> `fajr`
+- `gün çıxır` -> `sunrise`
+- `zöhr azanı` -> `dhuhr`
+- `əsr azanı` -> `asr`
+- `məğrib azanı` -> `maghrib`
+- `işa azanı` -> `isha`
+
+`gün batır` və `gecə yarısı` da docs JSON-da saxlanılır ki, rəsmi mənbənin tam ardıcıllığı itməsin.
 
 ## 2. Import et
 
-Nümunə:
+Bir şəhər üçün cari ay + növbəti ay:
 
 ```bash
 cd '/Users/rasulalekberov/APP/Muslim Time'
-python3 tools/qafqaz_importer.py \
-  --city Baku \
+python3 tools/qafqaz_sync.py \
+  --city-id 1 \
+  --city-name Bakı \
   --year 2026 \
-  --month 3 \
-  --input /absolute/path/to/baku_march_2026.csv
+  --month 4 \
+  --include-next-month
+```
+
+Bütün şəhərlər üçün cari ay + növbəti ay:
+
+```bash
+cd '/Users/rasulalekberov/APP/Muslim Time'
+python3 tools/qafqaz_sync.py \
+  --all-cities \
+  --current-window \
+  --include-next-month
 ```
 
 Bu script:
-- uyğun şəhəri tapır və ya yaradır
-- uyğun ayı tapır və ya yaradır
-- günləri tam əvəz edir
-- asset `version` dəyərini artırır
+- Qafqazislam print səhifəsindən rəsmi şəkil URL-ni tapır
+- CMYK JPG-ni PNG-yə çevirir
+- `Vision OCR` ilə cədvəli oxuyur
+- rəsmi sütun ardıcıllığını sabit saxlayaraq parse edir
+- `docs/namaz-time-data/...` altında tam JSON yaradır
+- Android asset içində app üçün lazım olan saatları yeniləyir
+- asset `version` dəyərini yalnız dəyişiklik olanda artırır
 
 ## 3. Build yoxla
 
@@ -54,13 +85,13 @@ JAVA_HOME='/Applications/Android Studio.app/Contents/jbr/Contents/Home' ./gradle
 
 ## 5. Tövsiyə olunan iş rejimi
 
-- Azərbaycan üçün yalnız `cari ay + növbəti ay` saxla
-- ay dəyişəndə yeni ayı bu script ilə import et
+- Azərbaycan üçün ən azı `cari ay + növbəti ay` saxla
+- həftəlik avtomatik run ilə yeni ay pəncərəsini qabaqcadan yenilə
 - digər ölkələr üçün API axını qalır
 
 ## 6. Şəhər adları
 
-Script və repository bu şəhər adlarını normallaşdırır:
+Script və repository şəhər adlarını normallaşdırır:
 - `Bakı` -> `Baku`
 - `Gəncə` -> `Ganja`
 - `Sumqayıt` -> `Sumgait`
@@ -69,5 +100,5 @@ Script və repository bu şəhər adlarını normallaşdırır:
 - `Lənkəran` -> `Lankaran`
 
 Yeni şəhər əlavə ediləcəksə:
-- asset-ə həmin city block əlavə edilir
+- saytın city option siyahısında varsa `--all-cities` rejimi ilə avtomatik əlavə olunur
 - lazım olsa `QafqazIslamRepository` alias siyahısı genişləndirilir

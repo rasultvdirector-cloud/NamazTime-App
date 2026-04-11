@@ -14,8 +14,8 @@ import com.muslimtime.app.data.ManualCountryOption
 internal fun locationSummaryText(context: Context, city: String, country: String, source: String): String =
     context.getString(
         R.string.settings_location_summary_template,
-        city,
-        country,
+        city.ifBlank { context.getString(R.string.city_baku) },
+        country.ifBlank { "Azerbaijan" },
         prayerSourceOptions(context).firstOrNull { it.first == source }?.second
             ?: context.getString(R.string.settings_prayer_source_auto),
     )
@@ -90,7 +90,10 @@ internal fun selectedManualLocation(
     val country = countryOptions.getOrNull(countrySpinner?.selectedItemPosition ?: -1)
         ?: com.muslimtime.app.data.ManualLocationCatalog.findCountry(fallbackLocation.country)
     val city = cityOptions.getOrNull(citySpinner?.selectedItemPosition ?: -1)
-        ?: country?.cities?.firstOrNull()
+        ?: country?.let { resolvedCountry ->
+            com.muslimtime.app.data.ManualLocationCatalog.findCity(resolvedCountry, fallbackLocation.city)
+                ?: resolvedCountry.cities.firstOrNull()
+        }
     return if (country != null && city != null) country to city else null
 }
 

@@ -66,10 +66,15 @@ internal object LocationDialogSupport {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val country = countryOptions.getOrNull(position) ?: return
                 if (isSuppressed()) return
+                val currentCity = cityOptionsProvider()
+                    .getOrNull(bindings.citySpinner.selectedItemPosition)
+                    ?.takeIf { selected ->
+                        country.cities.any { it.apiValue == selected.apiValue }
+                    }
                 setSuppressed(true)
-                bindCitySpinner(country, country.cities.firstOrNull())
+                bindCitySpinner(country, currentCity ?: country.cities.firstOrNull())
                 updateDialogLocationSummary(
-                    country.cities.firstOrNull()?.label ?: suggestedLocation.city,
+                    (currentCity ?: country.cities.firstOrNull())?.label ?: suggestedLocation.city,
                     country.label,
                 )
                 setSuppressed(false)

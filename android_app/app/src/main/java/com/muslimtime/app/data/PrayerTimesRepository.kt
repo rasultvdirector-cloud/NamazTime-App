@@ -24,7 +24,7 @@ object PrayerTimesRepository {
             return Result.success(cached.result)
         }
 
-        val chain = sourceChain(context, country)
+        val chain = sourceChain(context, city, country, date)
         var lastError: Throwable? = null
         for (source in chain) {
             val result = when (source) {
@@ -46,10 +46,21 @@ object PrayerTimesRepository {
         return Result.failure(lastError ?: IllegalStateException("No prayer time source available"))
     }
 
-    fun resolvedSource(context: Context, country: String): String = sourceChain(context, country).first()
+    fun resolvedSource(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar = Calendar.getInstance(),
+    ): String = sourceChain(context, city, country, date).first()
 
-    private fun sourceChain(context: Context, country: String): List<String> {
-        val supportsQafqaz = QafqazIslamRepository.supports(country)
+    private fun sourceChain(
+        context: Context,
+        city: String,
+        country: String,
+        date: Calendar,
+    ): List<String> {
+        val supportsQafqaz = QafqazIslamRepository.supports(country) &&
+            QafqazIslamRepository.hasCoverage(context, city, country, date)
         return when (PrayerPreferences.getSelectedPrayerSource(context)) {
             PrayerPreferences.PRAYER_SOURCE_QAFQAZ ->
                 if (supportsQafqaz) listOf(PrayerPreferences.PRAYER_SOURCE_QAFQAZ, PrayerPreferences.PRAYER_SOURCE_ALADHAN, PrayerPreferences.PRAYER_SOURCE_UMMAH)
@@ -92,7 +103,7 @@ object PrayerTimesRepository {
 
     private fun buildCacheKey(context: Context, city: String, country: String, date: Calendar): String {
         return listOf(
-            resolvedSource(context, country),
+            resolvedSource(context, city, country, date),
             city.trim().lowercase(),
             country.trim().lowercase(),
             date.get(Calendar.YEAR).toString(),

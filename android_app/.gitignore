@@ -3,3 +3,4 @@ keystore.properties
 *.keystore
 app.run.xml
 local.properties
+app/google-services.json
