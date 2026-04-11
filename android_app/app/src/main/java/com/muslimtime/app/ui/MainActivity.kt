@@ -49,6 +49,7 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.ProgressBar
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.app.AlertDialog
@@ -58,8 +59,6 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
@@ -151,6 +150,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         applySavedThemeMode()
         installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -158,7 +158,6 @@ class MainActivity : AppCompatActivity() {
         pager = findViewById(R.id.pager)
         nav = findViewById(R.id.bottom_nav)
 
-        applySystemBarStyle()
         applySystemBarInsets()
         AppPushManager.initialize(this)
 
@@ -233,15 +232,6 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         runCatching { unregisterReceiver(notificationCenterReceiver) }
         super.onStop()
-    }
-
-    private fun applySystemBarStyle() {
-        window.statusBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.status_bar_dark)
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        val isNightMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        controller.isAppearanceLightStatusBars = !isNightMode
-        controller.isAppearanceLightNavigationBars = !isNightMode
     }
 
     private fun applySystemBarInsets() {

@@ -10,6 +10,5 @@
         <item name="colorPrimaryVariant">#A5D6A7</item>
         <item name="colorOnPrimary">#000000</item>
         <item name="colorSecondary">#FFD54F</item>
-        <item name="android:statusBarColor">#1B5E20</item>
     </style>
 </resources>
