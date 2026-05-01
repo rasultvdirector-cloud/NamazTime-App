@@ -126,15 +126,29 @@ def canonical_city_key(raw: str) -> str:
     return aliases.get(key, key)
 
 
-def normalize_time_text(raw: str) -> str:
+def normalize_time_text(raw: str, column: str | None = None) -> str:
     text = raw.strip().upper()
     text = text.replace(".", ":").replace("O", "0")
     text = re.sub(r"[^0-9:]", "", text)
+    if re.fullmatch(r"\d:\d{2}", text):
+        if column in {"maghrib", "isha", "midnight"}:
+            text = f"2{text}"
+        else:
+            text = f"0{text}"
     if re.fullmatch(r"\d{4}", text):
         text = f"{text[:2]}:{text[2:]}"
     if re.fullmatch(r"\d{2}:\d{2}", text):
         return text
     return raw.strip()
+
+
+def looks_like_timeish(raw: str) -> bool:
+    text = raw.strip().upper().replace(".", ":").replace("O", "0")
+    text = re.sub(r"[^0-9:]", "", text)
+    return bool(
+        re.fullmatch(r"\d{4}", text) or
+        re.fullmatch(r"\d{1,2}:\d{2}", text)
+    )
 
 
 def canonical_city_name(raw: str) -> str:
@@ -203,15 +217,14 @@ def run_ocr(png_path: Path) -> list[Observation]:
 
 
 def dedupe_row_centers(observations: Iterable[Observation]) -> list[tuple[int, float]]:
-    imsak_cells = [
+    time_cells = [
         item
         for item in observations
-        if TIME_RE.fullmatch(item.text)
-        and abs(item.x - COLUMN_CENTERS["imsak"]) <= 0.03
+        if 0.20 <= item.y <= 0.84 and 0.26 <= item.x <= 0.96 and looks_like_timeish(item.text)
     ]
-    imsak_cells.sort(key=lambda item: item.y, reverse=True)
+    time_cells.sort(key=lambda item: item.y, reverse=True)
     row_centers: list[float] = []
-    for item in imsak_cells:
+    for item in time_cells:
         if row_centers and abs(row_centers[-1] - item.y) < 0.008:
             continue
         row_centers.append(item.y)
@@ -238,14 +251,14 @@ def nearest_time(observations: Iterable[Observation], row_y: float, column: str)
     candidates = [
         item
         for item in observations
-        if TIME_RE.fullmatch(normalize_time_text(item.text))
-        and abs(item.y - row_y) <= 0.009
-        and abs(item.x - center) <= 0.03
+        if TIME_RE.fullmatch(normalize_time_text(item.text, column))
+        and abs(item.y - row_y) <= 0.012
+        and abs(item.x - center) <= 0.05
     ]
     if not candidates:
         raise SystemExit(f"Missing {column} value near row y={row_y:.4f}")
     candidates.sort(key=lambda item: (abs(item.x - center), abs(item.y - row_y)))
-    return normalize_time_text(candidates[0].text)
+    return normalize_time_text(candidates[0].text, column)
 
 
 def join_text_band(observations: Iterable[Observation], row_y: float, band: tuple[float, float]) -> str:
@@ -253,7 +266,7 @@ def join_text_band(observations: Iterable[Observation], row_y: float, band: tupl
     candidates = [
         item
         for item in observations
-        if left <= item.x <= right and abs(item.y - row_y) <= 0.0105
+        if left <= item.x <= right and abs(item.y - row_y) <= 0.0125
     ]
     candidates.sort(key=lambda item: item.x)
     text = " ".join(item.text for item in candidates).strip()

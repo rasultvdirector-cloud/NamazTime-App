@@ -213,7 +213,7 @@
     <string name="settings_profile_summary_named">İstifadəçi adı: %1$s</string>
     <string name="settings_profile_summary_named_full">Müraciət: %1$s%2$s</string>
     <string name="settings_user_name_label">Adınız</string>
-    <string name="settings_user_name_hint">Məsələn: Dilarə</string>
+    <string name="settings_user_name_hint">Məsələn: Rasul</string>
     <string name="settings_user_gender_label">Cinsiyyət</string>
     <string name="settings_user_gender_unspecified">Seçilməyib</string>
     <string name="settings_user_gender_female">Qadın</string>

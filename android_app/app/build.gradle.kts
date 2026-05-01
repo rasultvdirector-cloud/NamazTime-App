@@ -38,8 +38,8 @@ android {
         applicationId = "com.muslimtime.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 15
-        versionName = "2.0.5"
+        versionCode = 16
+        versionName = "2.0.6"
         buildConfigField("boolean", "FIREBASE_PUSH_ENABLED", firebasePushEnabled.toString())
         buildConfigField("String", "TELEMETRY_BASE_URL", "\"$telemetryBaseUrl\"")
         buildConfigField("String", "QAFQAZ_MIRROR_BASE_URL", "\"$qafqazMirrorBaseUrl\"")
@@ -95,7 +95,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.media:media:1.7.0")
-    implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.android.material:material:1.13.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.viewpager2:viewpager2:1.1.0")

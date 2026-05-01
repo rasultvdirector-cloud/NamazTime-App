@@ -3,18 +3,24 @@ package com.muslimtime.app.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
-import com.muslimtime.app.notifications.AzanPlaybackService
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.muslimtime.app.R
+import com.muslimtime.app.notifications.AzanPlaybackService
 import com.muslimtime.app.notifications.PrayerActionReceiver
 
 class PrayerReminderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prayer_reminder)
+        applySystemBarInsets()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
@@ -67,6 +73,25 @@ class PrayerReminderActivity : AppCompatActivity() {
             )
             finish()
         }
+    }
+
+    private fun applySystemBarInsets() {
+        val root = findViewById<View>(R.id.reminder_root)
+        val initialLeft = root.paddingLeft
+        val initialTop = root.paddingTop
+        val initialRight = root.paddingRight
+        val initialBottom = root.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                initialLeft + systemBars.left,
+                initialTop + systemBars.top,
+                initialRight + systemBars.right,
+                initialBottom + systemBars.bottom,
+            )
+            insets
+        }
+        ViewCompat.requestApplyInsets(root)
     }
 
     private fun dispatchAction(action: String, notificationId: Int) {

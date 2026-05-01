@@ -235,20 +235,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applySystemBarInsets() {
+        val originalLeft = rootView.paddingLeft
         val originalTop = rootView.paddingTop
+        val originalRight = rootView.paddingRight
+        val originalNavLeft = nav.paddingLeft
+        val originalNavRight = nav.paddingRight
         val originalBottom = nav.paddingBottom
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             rootView.setPadding(
-                rootView.paddingLeft,
+                originalLeft + systemBars.left,
                 originalTop + systemBars.top,
-                rootView.paddingRight,
+                originalRight + systemBars.right,
                 rootView.paddingBottom,
             )
             nav.setPadding(
-                nav.paddingLeft,
+                originalNavLeft + systemBars.left,
                 nav.paddingTop,
-                nav.paddingRight,
+                originalNavRight + systemBars.right,
                 originalBottom + systemBars.bottom,
             )
             insets
@@ -1663,8 +1667,7 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
         }
 
         fun sendAudioServiceAction(action: String) {
-            ContextCompat.startForegroundService(
-                requireContext(),
+            requireContext().startService(
                 Intent(requireContext(), QuranAudioPlaybackService::class.java).apply {
                     this.action = action
                 },
@@ -2069,6 +2072,7 @@ class QuranFragment : Fragment(R.layout.fragment_quran) {
                         QuranAudioPlaybackService.EXTRA_SURA_NUMBER,
                         ayah.ayahKey.substringBefore(":").toIntOrNull() ?: -1,
                     )
+                    putExtra(QuranAudioPlaybackService.EXTRA_USER_INITIATED_PLAYBACK, true)
                 },
             )
             currentPlayingUrl = ayah.audioUrl

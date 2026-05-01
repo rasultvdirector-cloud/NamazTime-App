@@ -85,6 +85,10 @@ class QuranAudioPlaybackService : Service() {
     }
 
     private fun handlePlay(intent: Intent) {
+        if (!isUserInitiatedPlaybackRequest(intent)) {
+            stopSelf()
+            return
+        }
         val urls = intent.getStringArrayListExtra(EXTRA_URLS).orEmpty()
         val ayahKeys = intent.getStringArrayListExtra(EXTRA_AYAH_KEYS).orEmpty()
         val suraTitle = intent.getStringExtra(EXTRA_SURA_TITLE).orEmpty()
@@ -119,7 +123,15 @@ class QuranAudioPlaybackService : Service() {
 
         createChannelIfNeeded()
         updateMediaSession(track, PlaybackStateCompat.STATE_BUFFERING)
-        startForeground(NOTIFICATION_ID, buildNotification(track))
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(track))
+        } catch (exception: RuntimeException) {
+            if (isForegroundStartDenied(exception)) {
+                stopPlaybackAfterForegroundStartDenied()
+                return
+            }
+            throw exception
+        }
         releasePlayer()
 
         mediaPlayer = MediaPlayer().apply {
@@ -163,6 +175,31 @@ class QuranAudioPlaybackService : Service() {
         }
 
         notifyStateChanged()
+    }
+
+    private fun isUserInitiatedPlaybackRequest(intent: Intent): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM ||
+            intent.getBooleanExtra(EXTRA_USER_INITIATED_PLAYBACK, false)
+    }
+
+    private fun isForegroundStartDenied(exception: RuntimeException): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            exception.javaClass.name == "android.app.ForegroundServiceStartNotAllowedException"
+    }
+
+    private fun stopPlaybackAfterForegroundStartDenied() {
+        releasePlayer()
+        playlist = emptyList()
+        currentIndex = -1
+        currentTrackUrl = null
+        currentAyahKey = null
+        currentSuraTitle = null
+        isPlayingNow = false
+        currentPositionMs = 0
+        currentDurationMs = 0
+        progressHandler.removeCallbacks(progressRunnable)
+        notifyStateChanged()
+        stopSelf()
     }
 
     private fun pausePlayback() {
@@ -523,6 +560,7 @@ class QuranAudioPlaybackService : Service() {
         const val EXTRA_INDEX = "extra_index"
         const val EXTRA_SURA_TITLE = "extra_sura_title"
         const val EXTRA_SURA_NUMBER = "extra_sura_number"
+        const val EXTRA_USER_INITIATED_PLAYBACK = "extra_user_initiated_playback"
         const val EXTRA_URL = "extra_url"
         const val EXTRA_AYAH_KEY = "extra_ayah_key"
         const val EXTRA_IS_PLAYING = "extra_is_playing"
